@@ -1,18 +1,46 @@
-/.phpunit.cache
+# Dependencies
 /node_modules
+/vendor
+
+# Compiled Assets
 /public/build
 /public/hot
-/public/storage
-/storage/*.key
-/vendor
-.env
-.env.backup
-.env.production
+
+# Storage & Logs
+/storage/app/public
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
+/storage/logs/*.log
+!/storage/logs/.gitignore
+/storage/pail
+
+# Environment Files
+/.env
+/.env.testing
+/.env.backup
+/.env.production
+
+# Cache & Backup Files
+/.phpunit.result.cache
+/phpunit.xml.bak
+
+# Database
+*.sqlite
+*.sqlite-journal
+
+# IDE/Editor Config
+/.vscode/
+/.idea/
+/.fleet/
+
+# Homestead
 Homestead.json
 Homestead.yaml
+/.vagrant
+
+# Misc
 auth.json
 npm-debug.log
 yarn-error.log
-/.fleet
-/.idea
-/.vscode
