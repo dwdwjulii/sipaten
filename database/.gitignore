@@ -1,0 +1,33 @@
+# Dependencies
+/node_modules
+/vendor
+
+# Compiled Assets
+/public/build
+/public/hot
+
+# Storage & Logs
+/storage/app/public
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
+/storage/logs/*.log
+!/storage/logs/.gitignore
+
+# Environment Files
+/.env
+/.env.testing
+/.env.backup
+
+# Cache & Backup Files
+/.phpunit.result.cache
+/phpunit.xml.bak
+
+# Database
+*.sqlite
+*.sqlite-journal
+
+# IDE/Editor Config
+/.vscode/
+/.idea/

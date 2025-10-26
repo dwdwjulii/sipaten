@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none !important;
+}
+/* Hilangkan spinner bawaan di Chrome, Safari, Edge */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hilangkan spinner bawaan di Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Hilangkan icon default di Chrome, Edge, Safari */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    display: none;
+}
+
+/* Popup calendar wrapper */
+.datepicker-dropdown {
+    @apply rounded-md shadow-md;
+    transform: scale(0.85);
+    transform-origin: top left;
+    font-size: 12px;
+    width: auto !important;
+    min-width: auto !important;
+}
+
+/* Grid untuk header days & tanggal */
+.datepicker-dropdown .datepicker-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    text-align: center;
+}
+
+/* Cell tanggal */
+.datepicker-dropdown .datepicker-cell {
+    @apply h-7 flex items-center justify-center text-center 
+           rounded-full text-gray-800 hover:bg-green-100 cursor-pointer text-[13px];
+    width: 100% !important; /* isi penuh 1 kolom grid */
+}
+
+/* Tanggal aktif (hari ini) */
+.datepicker-dropdown .datepicker-cell.today {
+    @apply border border-green-500 text-green-600 rounded-full;
+}
+
+/* Tanggal dipilih */
+.datepicker-dropdown .datepicker-cell.selected {
+    @apply bg-green-600 text-white font-semibold rounded-full;
+}
+
+/* Header hari (Su, Mo, ...) */
+.datepicker-dropdown .datepicker-day {
+    @apply h-7 flex items-center justify-center text-center text-[13px] text-gray-500;
+    width: 100% !important; /* isi penuh 1 kolom grid */
+}
+
+/* Hapus warna biru bawaan browser saat autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px white inset !important; /* ganti white sesuai warna bg input */
+    -webkit-text-fill-color: #000 !important; /* warna teks */
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Autofill style agar bg putih dan text gray-800 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important; /* bg putih */
+    -webkit-text-fill-color: #1f2937 !important; /* text-gray-800 */
+}
+
+.scroll-area {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE & Edge */
+}
+.scroll-area::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
+@layer components {
+    /* Style untuk tombol konfirmasi merah */
+    .swal-button-confirm-red {
+        @apply rounded-md border-transparent bg-red-500 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2;
+    }
+
+    /* Style untuk tombol batal abu-abu */
+    .swal-button-cancel {
+        @apply rounded-md border-transparent bg-blue-400 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 mr-2;
+    }
+
+    .swal-button-konfirmasi-green {
+        @apply rounded-md border-transparent bg-green-500 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2;
+    }
+
+    /* Style untuk tombol batal abu-abu */
+    .swal-button-batal {
+        @apply rounded-md border-transparent bg-gray-400 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 mr-2;
+    }
+}
