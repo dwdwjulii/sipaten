@@ -27,7 +27,8 @@ class TahapTest extends TestCase
 
     
     // Memastikan logika pengecekan duplikat Anda berfungsi.
-    public function test_store_fails_if_tahap_already_exists()
+      /** @test */
+    public function store_fails_if_tahap_already_exists()
     {
       
         Tahap::factory()->create([
@@ -52,7 +53,8 @@ class TahapTest extends TestCase
 
    
     // Memastikan delete Tahap berfungsi.
-    public function test_deleting_tahap_also_deletes_related_anggota()
+      /** @test */
+    public function deleting_tahap_also_deletes_related_anggota()
     {
 
         $tahap = Tahap::factory()->create();

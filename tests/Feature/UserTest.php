@@ -30,7 +30,8 @@ class UserTest extends TestCase
     }
 
     //Test Otorisasi (Petugas)
-    public function test_petugas_cannot_view_user_list_page()
+      /** @test */
+    public function petugas_cannot_view_user_list_page()
     {
         $response = $this->actingAs($this->petugas)->get(route('pengguna.index'));
         $response->assertStatus(302); // Asumsi Anda menggunakan 403 Forbidden
@@ -55,7 +56,8 @@ class UserTest extends TestCase
     }
 
     //Test Validasi (Email User)
-    public function test_admin_cannot_create_user_with_duplicate_email()
+      /** @test */
+    public function admin_cannot_create_user_with_duplicate_email()
     {
         $userData = [
             'name' => 'User Gagal',
@@ -72,7 +74,8 @@ class UserTest extends TestCase
     }
 
     //Test Case untuk (update data user)
-    public function test_admin_can_update_user_data()
+      /** @test */
+    public function admin_can_update_user_data()
     {
         $updateData = [
             'name' => 'Nama Sudah Diubah',
@@ -93,7 +96,8 @@ class UserTest extends TestCase
     }
 
     //Test Case untuk (update password)
-    public function test_admin_can_update_user_password()
+      /** @test */
+    public function admin_can_update_user_password()
     {
         $updateData = [
             'name' => $this->petugas->name,
@@ -109,7 +113,8 @@ class UserTest extends TestCase
     }
 
     //Test Case untuk (delete)
-    public function test_admin_can_delete_user()
+      /** @test */
+    public function admin_can_delete_user()
     {
         $userToDelete = User::factory()->create();
 

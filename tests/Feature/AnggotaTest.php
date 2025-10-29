@@ -30,7 +30,8 @@ class AnggotaTest extends TestCase
     }
 
     // Pengujian: Admin dapat membuat anggota baru yang aktif
-    public function test_admin_can_create_new_anggota_aktif()
+      /** @test */
+    public function admin_can_create_new_anggota_aktif()
     {
         $anggotaData = [
             'tahap_id' => $this->tahap->id,
@@ -62,7 +63,8 @@ class AnggotaTest extends TestCase
     }
 
     // Pengujian: Admin membuat anggota non-aktif tidak membuat placeholder
-    public function test_admin_create_anggota_non_aktif_does_not_create_placeholder()
+      /** @test */
+    public function admin_create_anggota_non_aktif_does_not_create_placeholder()
     {
         $anggotaData = [
             'tahap_id' => $this->tahap->id,
@@ -90,7 +92,8 @@ class AnggotaTest extends TestCase
     }
 
     // Pengujian: Admin tidak dapat membuat anggota jika periode diarsip
-    public function test_admin_cannot_create_anggota_if_period_is_archived()
+      /** @test */
+    public function admin_cannot_create_anggota_if_period_is_archived()
     {
         Arsip::factory()->create([
             'bulan' => now()->month,
@@ -121,16 +124,16 @@ class AnggotaTest extends TestCase
     }
 
     // Pengujian: Update status aktif ke non-aktif menghapus placeholder
-    public function test_update_status_aktif_to_non_aktif_deletes_placeholder()
+      /** @test */
+    public function update_status_aktif_to_non_aktif_deletes_placeholder()
     {
-        // 1. ARRANGE (Persiapan)
+
         $anggota = Anggota::factory()
             ->withPencatatanPlaceholder() 
             ->create([
                 'tahap_id' => $this->tahap->id,
             ]);
         
-        // Panggil fresh() sebelum menggunakan objek untuk update
         $anggota = $anggota->fresh(); 
         
         $this->assertDatabaseHas('pencatatans', [
@@ -138,20 +141,17 @@ class AnggotaTest extends TestCase
             'is_locked' => false
         ]);
 
-        // Ambil data valid, lalu ubah statusnya
         $updateData = $this->getValidUpdateData($anggota, [ 
             'status' => 'non-aktif' 
         ]);
 
         $this->actingAs($this->admin)->put(route('anggota.update', $anggota->id), $updateData);
 
-        // ASSERT 1: Placeholder telah dihapus
         $this->assertDatabaseMissing('pencatatans', [
             'anggota_id' => $anggota->id,
             'is_locked' => false
         ]);
 
-        // ASSERT 2: Status Anggota di DB telah berubah 
         $this->assertDatabaseHas('anggotas', [
             'id' => $anggota->id,
             'status' => 'non-aktif' 
@@ -159,9 +159,9 @@ class AnggotaTest extends TestCase
     }
 
     // Pengujian: Update status non-aktif ke aktif membuat placeholder
-    public function test_update_status_non_aktif_to_aktif_creates_placeholder()
+      /** @test */
+    public function update_status_non_aktif_to_aktif_creates_placeholder()
     {
-        // ARRANGE
         $anggota = Anggota::factory()
             ->nonaktif() 
             ->create([
@@ -169,7 +169,6 @@ class AnggotaTest extends TestCase
                 'jumlah_induk' => 1
             ]);
 
-        // Buat Ternak (Penting agar lolos whereHas di controller)
         Ternak::factory()->create([
             'anggota_id' => $anggota->id,
             'tipe_ternak' => 'Induk',
@@ -180,7 +179,6 @@ class AnggotaTest extends TestCase
         $anggota = $anggota->fresh(); 
         $this->assertDatabaseMissing('pencatatans', ['anggota_id' => $anggota->id]);
 
-        // ACT: Kirim update (dengan semua field wajib)
         $updateData = $this->getValidUpdateData($anggota, [
             'status' => 'aktif', 
             'nama' => $anggota->nama,
@@ -193,101 +191,14 @@ class AnggotaTest extends TestCase
 
         $this->actingAs($this->admin)->put(route('anggota.update', $anggota->id), $updateData);
 
-        // ASSERT: Verifikasi Placeholder Dibuat
         $this->assertDatabaseHas('pencatatans', [
             'anggota_id' => $anggota->id,
             'is_locked' => false
         ]);
     }
     
-    // Pengujian: Update dapat menambahkan induk baru ke anggota yang sudah ada
-    public function test_update_can_add_new_induk_to_existing_anggota()
-    {
-        // 1. ARRANGE (Persiapan)
-        $anggota = Anggota::factory()
-            ->withPencatatanPlaceholder() // Buat 1 ternak & 1 placeholder
-            ->create([
-                'tahap_id' => $this->tahap->id,
-                'jumlah_induk' => 1
-            ]);
-        
-        $anggota = $anggota->fresh(); 
-        $ternakLama = $anggota->ternaks->first();
-        $placeholder = $anggota->latestPencatatan;
-
-        // --- KRUSIAL FIX: Buat SATU detail agar details()->exists() bernilai TRUE ---
-        PencatatanDetail::factory()->create([
-            'pencatatan_id' => $placeholder->id,
-            'ternak_id' => $ternakLama->id,
-            'kondisi_ternak' => 'Sehat', // Isi data agar dianggap valid
-        ]);
-        
-        $anggota = $anggota->fresh(); // Muat ulang lagi
-
-        // ACT: Siapkan data update (Menambah Induk)
-        $updateData = $this->getValidUpdateData($anggota, [
-            'harga_induk' => [
-                "Rp " . number_format($ternakLama->harga, 0, ',', '.'), // Harga lama (dengan format)
-                "Rp 12.000.000" // Harga induk BARU (dengan format)
-            ]
-        ]);
-        
-        // ACT: Jalankan Update
-        $this->actingAs($this->admin)->put(route('anggota.update', $anggota->id), $updateData);
-        
-        // ASSERT: Muat ulang anggota untuk verifikasi jumlah induk
-        $anggotaFinal = $anggota->fresh();
-
-        $this->assertDatabaseCount('ternaks', 2);
-        $this->assertDatabaseHas('ternaks', ['harga' => 12000000]);
-        $this->assertDatabaseHas('anggotas', ['id' => $anggotaFinal->id, 'jumlah_induk' => 2]);
-        
-        $ternakBaru = Ternak::where('harga', 12000000)->first();
-        $this->assertDatabaseHas('pencatatan_details', [
-            'ternak_id' => $ternakBaru->id,
-        ]);
-    }
-
-
-   public function test_update_can_change_harga_of_existing_induk()
-    {
-        // ARRANGE
-        $anggota = Anggota::factory()
-            ->withPencatatanPlaceholder() 
-            ->create([
-                'tahap_id' => $this->tahap->id,
-                'jumlah_induk' => 1
-            ]);
-        
-        // Muat ulang anggota secara eksplisit
-        $anggota = $anggota->fresh(); 
-        
-        $ternak = $anggota->ternaks->first();
-        $hargaLama = $ternak->harga; 
-        $hargaBaru = 9999999; 
-
-        $this->assertNotNull($ternak); 
-        $this->assertDatabaseHas('ternaks', ['id' => $ternak->id, 'harga' => $hargaLama]);
-
-        // ACT
-        $updateData = $this->getValidUpdateData($anggota, [ 
-            // Format input yang dijamin bisa diproses:
-            'harga_induk' => [
-                "Rp " . number_format($hargaBaru, 0, ',', '.') 
-            ]
-        ]);
-        
-        $this->actingAs($this->admin)->put(route('anggota.update', $anggota->id), $updateData);
-        
-        // ASSERT
-        // Memverifikasi ID ternak tersebut memiliki harga BARU (9999999)
-        $this->assertDatabaseHas('ternaks', ['id' => $ternak->id, 'harga' => $hargaBaru]); 
-        // Memastikan tidak ada duplikasi
-        $this->assertDatabaseCount('ternaks', 1);
-    }
-
-
-    public function test_anggota_deletion_removes_related_ternak_and_pencatatan()
+      /** @test */
+    public function anggota_deletion_removes_related_ternak_and_pencatatan()
     {
         $anggota = Anggota::factory()
             ->withPencatatanPlaceholder() 

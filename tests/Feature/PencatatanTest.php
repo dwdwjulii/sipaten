@@ -41,7 +41,7 @@ class PencatatanTest extends TestCase
 
     //Tes ini memastikan Admin GAGAL melakukan "Tutup Buku" (arsip)
     /** @test */
-    public function test_admin_cannot_archive_if_petugas_has_not_filled_report()
+    public function admin_cannot_archive_if_petugas_has_not_filled_report()
     {
         $anggota = Anggota::factory()
             ->withPencatatanPlaceholder() 
@@ -72,7 +72,7 @@ class PencatatanTest extends TestCase
 
     //Tes ini memastikan Admin BERHASIL melakukan "Tutup Buku" (arsip)
     /** @test */
-    public function test_admin_can_archive_completed_reports()
+    public function admin_can_archive_completed_reports()
     {
  
         $anggota = Anggota::factory()
@@ -110,7 +110,7 @@ class PencatatanTest extends TestCase
   
     // Tes ini memastikan Admin BERHASIL "Mulai Periode Baru" (reset)
     /** @test */
-    public function test_admin_can_reset_period_after_archive_is_done()
+    public function admin_can_reset_period_after_archive_is_done()
     {
  
         $anggota = Anggota::factory()->create([
@@ -160,7 +160,7 @@ class PencatatanTest extends TestCase
     
     // Tes ini memastikan petugas bisa menyimpan data pencatatan dasar
     /** @test */
-    public function test_petugas_can_store_pencatatan_for_anggota()
+    public function petugas_can_store_pencatatan_for_anggota()
     {
         $anggota = Anggota::factory()
             ->withPencatatanPlaceholder() 
@@ -229,7 +229,7 @@ class PencatatanTest extends TestCase
     //Tes ini memastikan bahwa jika petugas melaporkan ternak 'Mati'/'Terjual',
     // record Ternak master di-update statusnya menjadi 'nonaktif'.
     /** @test */
-    public function test_store_sets_ternak_nonaktif_when_mati_or_terjual() 
+    public function store_sets_ternak_nonaktif_when_mati_or_terjual() 
     {
 
         $anggota = Anggota::factory()
@@ -283,7 +283,7 @@ class PencatatanTest extends TestCase
    
     // Tes ini memastikan petugas bisa mengubah status ternak 'Anak' menjadi 'Induk'
     /** @test */
-    public function test_update_can_promote_anak_to_induk()
+    public function update_can_promote_anak_to_induk()
     {
         $anggota = Anggota::factory()
             ->withPencatatanPlaceholder()
