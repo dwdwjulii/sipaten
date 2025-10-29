@@ -268,7 +268,7 @@
                                     {{ $anggota->tahap?->label ?? 'Tanpa Tahap' }}
                                 </span>
 
-                                {{-- 🚩 PERBAIKAN 4: Logika Status Disesuaikan untuk Placeholder dan Ternak Mati --}}
+                                {{-- 🚩 PERBAIKAN: Logika Status yang Konsisten dengan Controller --}}
                                 @if($anggota->latestPencatatan)
                                     @if($anggota->latestPencatatan->is_locked)
                                         {{-- 1. Status Arsip (Terkunci) --}}
@@ -276,54 +276,51 @@
                                             Arsip
                                         </span>
                                     @else
-                                    {{-- 2. Status Aktif (Belum Terkunci) --}}
-                                    @php
-                                        $pencatatan = $anggota->latestPencatatan;
-                                        
-                                        $jumlahTernakAktif = $anggota->ternaks_count ?? 0; 
-                                        
-                                        $jumlahDetailLengkap = 0; 
-                                        $detailsExistAnywhere = false; 
-
-                                        if ($pencatatan) {
-                                            $filledDetailsLonggar = $pencatatan->details->filter(fn($detail) => !empty($detail->kondisi_ternak));
-                                            $detailsExistAnywhere = $filledDetailsLonggar->isNotEmpty();
+                                        {{-- 2. Status Aktif (Belum Terkunci) --}}
+                                        @php
+                                            $pencatatan = $anggota->latestPencatatan;
                                             
-                                            $jumlahDetailLengkap = $pencatatan->details->filter(function($detail) {
-                                                if (empty($detail->kondisi_ternak)) {
-                                                    return false;
-                                                }
-                                
-                                                if ($detail->ternak && $detail->ternak->status_aktif === 'aktif') {
-                                                    return true;
-                                                }
-                                                return false;
-                                            })->count();
-                                        }
-                                    @endphp
+                                            // Hitung ternak aktif SAAT INI (real-time)
+                                            $jumlahTernakAktifSekarang = $anggota->ternaks()
+                                                ->where('status_aktif', 'aktif')
+                                                ->count();
+                                            
+                                            // Hitung detail yang sudah dicatat DAN ternaknya masih aktif
+                                            $jumlahDetailAktifTercatat = 0;
+                                            $pernahAdaDetail = false;
+                                            
+                                            if ($pencatatan) {
+                                                // Cek apakah pernah ada detail yang terisi
+                                                $pernahAdaDetail = $pencatatan->details->filter(function($detail) {
+                                                    return !empty($detail->kondisi_ternak);
+                                                })->isNotEmpty();
+                                                
+                                                // Hitung detail yang terisi DAN ternaknya masih aktif
+                                                $jumlahDetailAktifTercatat = $pencatatan->details->filter(function($detail) {
+                                                    return !empty($detail->kondisi_ternak) && 
+                                                        $detail->ternak && 
+                                                        $detail->ternak->status_aktif === 'aktif';
+                                                })->count();
+                                            }
+                                        @endphp
 
-                                    {{-- --- LOGIKA STATUS BARU --- --}}
-                                    @if($jumlahTernakAktif == 0 && !$detailsExistAnywhere)
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-800">
-                                            Tidak Ada Tugas
-                                        </span>
-                                    
-                                    @elseif($jumlahTernakAktif > 0 && !$detailsExistAnywhere)
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800">
-                                            Belum Dicatat
-                                        </span>
-
-                                    @elseif($detailsExistAnywhere && $jumlahDetailLengkap < $jumlahTernakAktif)
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-800">
-                                            Perlu Update
-                                        </span>
-                                    
-                                    @else
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-                                            Sudah Dicatat
-                                        </span>
+                                        @if($jumlahTernakAktifSekarang > 0 && !$pernahAdaDetail)
+                                            {{-- ERROR: Ada ternak aktif tapi belum pernah dicatat sama sekali --}}
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                                                Belum Dicatat
+                                            </span>
+                                        @elseif($pernahAdaDetail && $jumlahDetailAktifTercatat < $jumlahTernakAktifSekarang)
+                                            {{-- WARNING: Pernah dicatat tapi ada ternak baru yang belum tercatat --}}
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-800">
+                                                Perlu Update
+                                            </span>
+                                        @else
+                                            {{-- SUCCESS: Semua lengkap atau tidak ada ternak aktif --}}
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                                                Sudah Dicatat
+                                            </span>
+                                        @endif
                                     @endif
-                                @endif
                                 @else
                                     {{-- 3. Tidak ada placeholder pencatatan sama sekali --}}
                                     <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">

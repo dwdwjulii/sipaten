@@ -378,21 +378,29 @@
                                         ?>
 
                                         <?php if($pencatatan && $pencatatan->is_locked): ?>
+                                            
                                             <span class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">
                                                 Diarsipkan
                                             </span>
 
                                         <?php elseif($pencatatan && $detailsExistAndFilled && $jumlahTernakAktif > 0 && $jumlahDetailLengkap < $jumlahTernakAktif): ?>
+                                            
+                                            
                                             <span class="px-2 py-1 text-xs font-semibold text-orange-800 bg-orange-100 rounded-full">
                                                 Perlu Update
                                             </span>
 
                                         <?php elseif($pencatatan && $detailsExistAndFilled): ?>
+                                            
+                                            
+                                            
                                             <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
                                                 Sudah Dicatat
                                             </span>
 
                                         <?php else: ?>
+                                            
+                                            
                                             <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
                                                 Belum Dicatat
                                             </span>

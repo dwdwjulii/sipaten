@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Anggota;
 use App\Models\Ternak;
 use App\Models\Pencatatan;
+use App\Models\Tahap;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AnggotaFactory extends Factory
@@ -16,6 +17,7 @@ class AnggotaFactory extends Factory
         $jumlahInduk = $this->faker->numberBetween(1, 3);
 
         return [
+             'tahap_id' => Tahap::factory(),
             'nama' => $this->faker->name(),
             'jenis_ternak' => $this->faker->randomElement(['Sapi', 'Kambing']),
             'jumlah_induk' => $jumlahInduk,

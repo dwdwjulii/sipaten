@@ -293,54 +293,51 @@
                                             Arsip
                                         </span>
                                     <?php else: ?>
-                                    
-                                    <?php
-                                        $pencatatan = $anggota->latestPencatatan;
                                         
-                                        $jumlahTernakAktif = $anggota->ternaks_count ?? 0; 
-                                        
-                                        $jumlahDetailLengkap = 0; 
-                                        $detailsExistAnywhere = false; 
-
-                                        if ($pencatatan) {
-                                            $filledDetailsLonggar = $pencatatan->details->filter(fn($detail) => !empty($detail->kondisi_ternak));
-                                            $detailsExistAnywhere = $filledDetailsLonggar->isNotEmpty();
+                                        <?php
+                                            $pencatatan = $anggota->latestPencatatan;
                                             
-                                            $jumlahDetailLengkap = $pencatatan->details->filter(function($detail) {
-                                                if (empty($detail->kondisi_ternak)) {
-                                                    return false;
-                                                }
-                                
-                                                if ($detail->ternak && $detail->ternak->status_aktif === 'aktif') {
-                                                    return true;
-                                                }
-                                                return false;
-                                            })->count();
-                                        }
-                                    ?>
+                                            // Hitung ternak aktif SAAT INI (real-time)
+                                            $jumlahTernakAktifSekarang = $anggota->ternaks()
+                                                ->where('status_aktif', 'aktif')
+                                                ->count();
+                                            
+                                            // Hitung detail yang sudah dicatat DAN ternaknya masih aktif
+                                            $jumlahDetailAktifTercatat = 0;
+                                            $pernahAdaDetail = false;
+                                            
+                                            if ($pencatatan) {
+                                                // Cek apakah pernah ada detail yang terisi
+                                                $pernahAdaDetail = $pencatatan->details->filter(function($detail) {
+                                                    return !empty($detail->kondisi_ternak);
+                                                })->isNotEmpty();
+                                                
+                                                // Hitung detail yang terisi DAN ternaknya masih aktif
+                                                $jumlahDetailAktifTercatat = $pencatatan->details->filter(function($detail) {
+                                                    return !empty($detail->kondisi_ternak) && 
+                                                        $detail->ternak && 
+                                                        $detail->ternak->status_aktif === 'aktif';
+                                                })->count();
+                                            }
+                                        ?>
 
-                                    
-                                    <?php if($jumlahTernakAktif == 0 && !$detailsExistAnywhere): ?>
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-800">
-                                            Tidak Ada Tugas
-                                        </span>
-                                    
-                                    <?php elseif($jumlahTernakAktif > 0 && !$detailsExistAnywhere): ?>
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800">
-                                            Belum Dicatat
-                                        </span>
-
-                                    <?php elseif($detailsExistAnywhere && $jumlahDetailLengkap < $jumlahTernakAktif): ?>
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-800">
-                                            Perlu Update
-                                        </span>
-                                    
-                                    <?php else: ?>
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-                                            Sudah Dicatat
-                                        </span>
+                                        <?php if($jumlahTernakAktifSekarang > 0 && !$pernahAdaDetail): ?>
+                                            
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                                                Belum Dicatat
+                                            </span>
+                                        <?php elseif($pernahAdaDetail && $jumlahDetailAktifTercatat < $jumlahTernakAktifSekarang): ?>
+                                            
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-800">
+                                                Perlu Update
+                                            </span>
+                                        <?php else: ?>
+                                            
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                                                Sudah Dicatat
+                                            </span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-                                <?php endif; ?>
                                 <?php else: ?>
                                     
                                     <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">

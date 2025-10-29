@@ -14,7 +14,7 @@ class ArsipController extends Controller
     public function index()
     {
         try {
-            // data arsip dan status dalam satu query
+            
             $arsipsPerTahun = DB::table('arsips')
                 ->select('arsips.tahun', DB::raw('COUNT(arsips.id) as jumlah'), 'status_tahunan.status')
                 ->leftJoin('status_tahunan', 'arsips.tahun', '=', 'status_tahunan.tahun')
@@ -30,7 +30,6 @@ class ArsipController extends Controller
             return view('arsip', compact('arsipsPerTahun'));
         } catch (\Exception $e) {
             Log::error('Gagal memuat halaman arsip tahunan: ' . $e->getMessage());
-            // Redirect atau tampilkan halaman error
             return back()->with('error', 'Tidak dapat memuat data arsip. Silakan coba lagi.');
         }
     }
@@ -38,7 +37,7 @@ class ArsipController extends Controller
 
     public function byYear($tahun)
     {
-        // Ambil semua arsip berdasarkan tahun tertentu
+       
         $arsips = Arsip::where('tahun', $tahun)
             ->orderBy('bulan', 'asc')
             ->get();
@@ -48,38 +47,54 @@ class ArsipController extends Controller
 
     public function show(Arsip $arsip)
     {
-        // Tampilkan file PDF yang diminta
+        // Tampilkan file PDF 
         return Storage::response($arsip->path_file);
     }
 
     public function destroy(Arsip $arsip)
     {
         try {
-            $tahun = $arsip->tahun; // Simpan tahun sebelum arsip dihapus
-            $bulan = $arsip->bulan; // Simpan bulan untuk membuka kembali 'is_locked'
+            $tahun = $arsip->tahun;
+            $bulan = $arsip->bulan;
 
-            // Hapus file fisik dari storage
+            $arsipTerbaru = Arsip::orderBy('created_at', 'desc')->first();
+            
+            $iniArsipTerbaru = ($arsipTerbaru && $arsipTerbaru->id == $arsip->id);
+
             Storage::delete($arsip->path_file);
 
-            // Hapus record dari database
+            // 2. Hapus record dari database
             $arsip->delete();
 
-            // Buka kembali (unlock) record pencatatan yang terkait
-            Pencatatan::whereYear('tanggal_catatan', $tahun)
-                      ->whereMonth('tanggal_catatan', $bulan)
-                      ->update(['is_locked' => false]);
+            if ($iniArsipTerbaru) {
+                Pencatatan::whereYear('tanggal_catatan', $tahun)
+                        ->whereMonth('tanggal_catatan', $bulan)
+                        ->update(['is_locked' => false]);
+                
+                \Log::info('Arsip terbaru dihapus, pencatatan dibuka kembali', [
+                    'arsip_id' => $arsip->id,
+                    'tahun' => $tahun,
+                    'bulan' => $bulan
+                ]);
+            } else {
+                \Log::info('Arsip lama dihapus, pencatatan tetap locked', [
+                    'arsip_id' => $arsip->id,
+                    'tahun' => $tahun,
+                    'bulan' => $bulan
+                ]);
+            }
 
-            // Cek apakah masih ada arsip lain di tahun yang sama
             $sisaArsip = Arsip::where('tahun', $tahun)->count();
 
-            // Jika tidak ada arsip yang tersisa, kembalikan statusnya menjadi 'progress'
             if ($sisaArsip === 0) {
                 DB::table('status_tahunan')
                     ->where('tahun', $tahun)
                     ->update(['status' => 'progress']);
             }
 
-            return redirect()->route('arsip.tahun', $tahun)->with('success', 'Arsip berhasil dihapus dan periode pencatatan telah dibuka kembali.');
+            return redirect()->route('arsip.tahun', $tahun)
+                ->with('success', 'Arsip berhasil dihapus' . ($iniArsipTerbaru ? ' dan periode pencatatan telah dibuka kembali.' : '.'));
+                
         } catch (\Exception $e) {
             Log::error('Gagal menghapus arsip: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan saat menghapus arsip.');
@@ -91,7 +106,6 @@ class ArsipController extends Controller
     public function validasi($tahun)
     {
         try {
-            // Menggunakan updateOrInsert: update jika tahun sudah ada, insert jika belum ada.
             \DB::table('status_tahunan')->updateOrInsert(
                 ['tahun' => $tahun],
                 ['status' => 'selesai', 'updated_at' => now()]

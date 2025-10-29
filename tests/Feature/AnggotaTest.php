@@ -161,30 +161,38 @@ class AnggotaTest extends TestCase
     // Pengujian: Update status non-aktif ke aktif membuat placeholder
       /** @test */
     public function update_status_non_aktif_to_aktif_creates_placeholder()
-    {
-        $anggota = Anggota::factory()
-            ->nonaktif() 
+        {
+        $tahap = \App\Models\Tahap::factory()->create();
+
+        $siklusAktif = \App\Models\Pencatatan::factory()->create([
+            'tanggal_catatan' => now()->startOfDay(),
+            'is_locked' => false,
+        ]);
+
+        $anggota = \App\Models\Anggota::factory()
+            ->nonaktif()
             ->create([
-                'tahap_id' => $this->tahap->id,
-                'jumlah_induk' => 1
+                'tahap_id' => $tahap->id,
+                'jumlah_induk' => 1,
             ]);
 
-        Ternak::factory()->create([
+        \App\Models\Ternak::factory()->create([
             'anggota_id' => $anggota->id,
             'tipe_ternak' => 'Induk',
             'status_aktif' => 'aktif',
-            'harga' => 10000000 
+            'harga' => 10000000,
         ]);
-        
-        $anggota = $anggota->fresh(); 
+
+        $anggota = $anggota->fresh();
+
         $this->assertDatabaseMissing('pencatatans', ['anggota_id' => $anggota->id]);
 
         $updateData = $this->getValidUpdateData($anggota, [
-            'status' => 'aktif', 
+            'status' => 'aktif',
             'nama' => $anggota->nama,
             'jenis_ternak' => $anggota->jenis_ternak,
             'tempat_lahir' => $anggota->tempat_lahir,
-            'tanggal_lahir' => $anggota->tanggal_lahir->format('d/m/Y'), 
+            'tanggal_lahir' => $anggota->tanggal_lahir->format('d/m/Y'),
             'no_hp' => $anggota->no_hp,
             'lokasi_kandang' => $anggota->lokasi_kandang,
         ]);
@@ -193,7 +201,7 @@ class AnggotaTest extends TestCase
 
         $this->assertDatabaseHas('pencatatans', [
             'anggota_id' => $anggota->id,
-            'is_locked' => false
+            'is_locked' => false,
         ]);
     }
     

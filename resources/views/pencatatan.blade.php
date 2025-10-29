@@ -263,21 +263,29 @@
                                         @endphp
 
                                         @if($pencatatan && $pencatatan->is_locked)
+                                            {{-- 1. Diarsipkan (Abu-abu) --}}
                                             <span class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">
                                                 Diarsipkan
                                             </span>
 
                                         @elseif($pencatatan && $detailsExistAndFilled && $jumlahTernakAktif > 0 && $jumlahDetailLengkap < $jumlahTernakAktif)
+                                            {{-- 2. Perlu Update (Oranye) --}}
+                                            {{-- Muncul HANYA jika ada detail terisi TAPI masih ada ternak AKTIF yang belum lengkap --}}
                                             <span class="px-2 py-1 text-xs font-semibold text-orange-800 bg-orange-100 rounded-full">
                                                 Perlu Update
                                             </span>
 
                                         @elseif($pencatatan && $detailsExistAndFilled)
+                                            {{-- 3. Sudah Dicatat (Hijau) --}}
+                                            {{-- Muncul jika ada detail terisi DAN TIDAK memenuhi kondisi 'Perlu Update' --}}
+                                            {{-- Termasuk kasus di mana $jumlahTernakAktif menjadi 0 --}}
                                             <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
                                                 Sudah Dicatat
                                             </span>
 
                                         @else
+                                            {{-- 4. Belum Dicatat (Merah) --}}
+                                            {{-- Muncul jika $pencatatan null ATAU $detailsExistAndFilled false --}}
                                             <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
                                                 Belum Dicatat
                                             </span>
