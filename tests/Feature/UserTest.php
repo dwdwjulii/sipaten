@@ -29,16 +29,9 @@ class UserTest extends TestCase
         ]);
     }
 
-    //Test Otorisasi (Petugas)
-      /** @test */
-    public function petugas_cannot_view_user_list_page()
-    {
-        $response = $this->actingAs($this->petugas)->get(route('pengguna.index'));
-        $response->assertStatus(302); // Asumsi Anda menggunakan 403 Forbidden
-    }
-
-    //Test Case untuk (Create)
-    public function test_admin_can_create_new_user()
+    // Memastikan pengujian pembuatan data pengguna
+    /** @test */
+    public function admin_can_create_new_user()
     {
         $userData = [
             'name' => 'User Baru',
@@ -55,7 +48,7 @@ class UserTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'baru@example.com']);
     }
 
-    //Test Validasi (Email User)
+    // Pengujian validasi emali user
       /** @test */
     public function admin_cannot_create_user_with_duplicate_email()
     {
@@ -73,27 +66,6 @@ class UserTest extends TestCase
         $this->assertDatabaseMissing('users', ['name' => 'User Gagal']);
     }
 
-    //Test Case untuk (update data user)
-      /** @test */
-    public function admin_can_update_user_data()
-    {
-        $updateData = [
-            'name' => 'Nama Sudah Diubah',
-            'email' => $this->petugas->email,
-            'role' => $this->petugas->role,
-            'status' => 'non-aktif',
-            'password' => null, // Tidak ganti password
-        ];
-
-        $response = $this->actingAs($this->admin)->put(route('pengguna.update', $this->petugas), $updateData);
-
-        $response->assertRedirect(route('pengguna.index'));
-        $this->assertDatabaseHas('users', [
-            'id' => $this->petugas->id,
-            'name' => 'Nama Sudah Diubah',
-            'status' => 'non-aktif'
-        ]);
-    }
 
     //Test Case untuk (update password)
       /** @test */

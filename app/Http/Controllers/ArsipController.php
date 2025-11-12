@@ -22,6 +22,7 @@ class ArsipController extends Controller
                 ->orderByDesc('arsips.tahun')
                 ->get();
 
+            // Mengatur status arsip (progress)
             $arsipsPerTahun->transform(function ($item) {
                 $item->status = $item->status ?? 'progress';
                 return $item;
@@ -30,6 +31,7 @@ class ArsipController extends Controller
             return view('arsip', compact('arsipsPerTahun'));
         } catch (\Exception $e) {
             Log::error('Gagal memuat halaman arsip tahunan: ' . $e->getMessage());
+            // Redirect halaman error 
             return back()->with('error', 'Tidak dapat memuat data arsip. Silakan coba lagi.');
         }
     }
@@ -37,7 +39,7 @@ class ArsipController extends Controller
 
     public function byYear($tahun)
     {
-       
+        // Mengambil semua arsip berdasarkan tahun tertentu
         $arsips = Arsip::where('tahun', $tahun)
             ->orderBy('bulan', 'asc')
             ->get();
@@ -63,19 +65,36 @@ class ArsipController extends Controller
 
             Storage::delete($arsip->path_file);
 
-            // 2. Hapus record dari database
             $arsip->delete();
 
             if ($iniArsipTerbaru) {
-                Pencatatan::whereYear('tanggal_catatan', $tahun)
-                        ->whereMonth('tanggal_catatan', $bulan)
-                        ->update(['is_locked' => false]);
                 
-                \Log::info('Arsip terbaru dihapus, pencatatan dibuka kembali', [
-                    'arsip_id' => $arsip->id,
-                    'tahun' => $tahun,
-                    'bulan' => $bulan
-                ]);
+  
+                $adaSiklusBaruAktif = Pencatatan::withoutGlobalScopes()
+                                            ->where('is_locked', false)
+                                            ->exists();
+                
+                if ($adaSiklusBaruAktif) {
+                  
+                    \Log::warning('Arsip terbaru dihapus, TAPI pencatatan TIDAK dibuka kembali karena siklus baru sudah aktif.', [
+                        'arsip_id_dihapus' => $arsip->id,
+                        'tahun' => $tahun,
+                        'bulan' => $bulan
+                    ]);
+
+                } else {
+                 
+                    Pencatatan::whereYear('tanggal_catatan', $tahun)
+                              ->whereMonth('tanggal_catatan', $bulan)
+                              ->update(['is_locked' => false]);
+                    
+                    \Log::info('Arsip terbaru dihapus, pencatatan dibuka kembali', [
+                        'arsip_id' => $arsip->id,
+                        'tahun' => $tahun,
+                        'bulan' => $bulan
+                    ]);
+                }
+                
             } else {
                 \Log::info('Arsip lama dihapus, pencatatan tetap locked', [
                     'arsip_id' => $arsip->id,
@@ -93,7 +112,7 @@ class ArsipController extends Controller
             }
 
             return redirect()->route('arsip.tahun', $tahun)
-                ->with('success', 'Arsip berhasil dihapus' . ($iniArsipTerbaru ? ' dan periode pencatatan telah dibuka kembali.' : '.'));
+                ->with('success', 'Arsip berhasil dihapus.');
                 
         } catch (\Exception $e) {
             Log::error('Gagal menghapus arsip: ' . $e->getMessage());
@@ -102,10 +121,10 @@ class ArsipController extends Controller
     }
 
     
-
     public function validasi($tahun)
     {
         try {
+            
             \DB::table('status_tahunan')->updateOrInsert(
                 ['tahun' => $tahun],
                 ['status' => 'selesai', 'updated_at' => now()]
