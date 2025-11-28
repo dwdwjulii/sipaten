@@ -239,14 +239,32 @@
                                         {{ $anggota->lokasi_kandang }}
                                     </td>
                                     <td class="px-2 py-3 text-center border border-gray-100 text-gray-900 whitespace-nowrap">
-                                        {{ $anggota->latestPencatatan?->tanggal_catatan?->format('d M Y') ?? 'Belum ada' }}
+                                        @php
+                                            // LOGIKA PENTING: MENGATASI BUG GHOST RECORD
+                                            // Kita cek apakah relation 'pencatatans' sudah di-load (dari controller).
+                                            // Lalu kita sort berdasarkan jumlah detail terbanyak.
+                                            // Record dengan detail (Tgl 26) akan menang melawan record kosong (Tgl 27).
+                                            
+                                            $pencatatan = null;
+                                            if ($anggota->relationLoaded('pencatatans')) {
+                                                $pencatatan = $anggota->pencatatans->sortByDesc(function($p) {
+                                                    return $p->details->count();
+                                                })->first();
+                                            } 
+                                            
+                                            // Fallback (jika controller belum diperbaiki, meski sebaiknya diperbaiki)
+                                            if (!$pencatatan) {
+                                                $pencatatan = $anggota->latestPencatatan;
+                                            }
+                                        @endphp
+                                        
+                                        {{ $pencatatan?->tanggal_catatan?->format('d M Y') ?? 'Belum ada' }}
                                     </td>
                                     <td class="px-2 py-3 text-center border border-gray-100 whitespace-nowrap">
-                                        @php
-                                            $pencatatan = $anggota->latestPencatatan;
+                                         @php
                                             $jumlahTernakAktif = $anggota->ternaks_count ?? 0;
                                             $jumlahDetailLengkap = 0;
-                                            $detailsExistAndFilled = false; // Flag baru
+                                            $detailsExistAndFilled = false;
 
                                             if ($pencatatan) {
                                                 $filledDetails = $pencatatan->details->filter(function($detail) {
@@ -270,30 +288,27 @@
 
                                         @elseif($pencatatan && $detailsExistAndFilled && $jumlahTernakAktif > 0 && $jumlahDetailLengkap < $jumlahTernakAktif)
                                             {{-- 2. Perlu Update (Oranye) --}}
-                                            {{-- Muncul HANYA jika ada detail terisi TAPI masih ada ternak AKTIF yang belum lengkap --}}
                                             <span class="px-2 py-1 text-xs font-semibold text-orange-800 bg-orange-100 rounded-full">
                                                 Perlu Update
                                             </span>
 
                                         @elseif($pencatatan && $detailsExistAndFilled)
                                             {{-- 3. Sudah Dicatat (Hijau) --}}
-                                            {{-- Muncul jika ada detail terisi DAN TIDAK memenuhi kondisi 'Perlu Update' --}}
-                                            {{-- Termasuk kasus di mana $jumlahTernakAktif menjadi 0 --}}
                                             <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
                                                 Sudah Dicatat
                                             </span>
 
                                         @else
                                             {{-- 4. Belum Dicatat (Merah) --}}
-                                            {{-- Muncul jika $pencatatan null ATAU $detailsExistAndFilled false --}}
                                             <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
                                                 Belum Dicatat
                                             </span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-center border border-gray-100">
-                                        @if ($anggota->latestPencatatan)
-                                            <x-pencatatan.detail-modal :pencatatan="$anggota->latestPencatatan" />
+                                        {{-- Gunakan $pencatatan yang sudah dipilih "cerdas" tadi --}}
+                                        @if ($pencatatan)
+                                            <x-pencatatan.detail-modal :pencatatan="$pencatatan" />
                                         @else
                                             <button disabled class="text-gray-300 cursor-not-allowed" title="Belum ada catatan untuk dilihat">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>

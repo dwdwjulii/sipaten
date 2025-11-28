@@ -68,39 +68,49 @@
             </div>
         </div>
 
+        {{-- ================================================================ --}}
+        {{-- ==================== BLOK DINAMIS TERNAK (FINAL) ==================== --}}
+        {{-- ================================================================ --}}
         @php
             // Kueri yang benar: mencari ternak dengan tipe 'Induk' dan status 'aktif'
             $activeInduks = $anggota->ternaks()
-                                    ->where('tipe_ternak', 'Induk') // Menggunakan informasi dari controller Anda
+                                    ->where('tipe_ternak', 'Induk') 
                                     ->where('status_aktif', 'aktif')
                                     ->get();
             $activeIndukCount = $activeInduks->count();
+
+            // 🔥 FIX DESIMAL: Format data harga dari DB agar bersih dari .00
+            $formattedPrices = $activeInduks->pluck('harga')->map(function($harga) {
+                // Ubah ke float dulu, lalu format 0 desimal, lalu tambah Rp
+                return 'Rp ' . number_format((float)$harga, 0, ',', '.');
+            })->toArray();
         @endphp
 
-         <input type="hidden" name="original_induk_count" value="{{ $activeIndukCount }}">
+        <input type="hidden" name="original_induk_count" value="{{ $activeIndukCount }}">
 
         <div x-data="{
             showTernakForm: {{ $activeIndukCount > 0 ? 'true' : 'false' }},
             jumlahInduk: {{ old('jumlah_induk', $activeIndukCount) }},
-            hargaInduk: {{ json_encode(
-                old('harga_induk', $activeInduks->pluck('harga')->map(function ($harga) {
-                    return 'Rp ' . number_format($harga, 0, ',', '.');
-                })->toArray()),
-            ) }},
+            {{-- 🔥 FIX DESIMAL: Panggil variabel $formattedPrices --}}
+            hargaInduk: {{ json_encode(old('harga_induk', $formattedPrices)) }},
             formatRupiah(val) {
                 if (!val) return 'Rp ';
-                let number = String(val).replace(/\D/g, '');
-                return 'Rp ' + number.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                let number = String(val).replace(/\D/g, ''); 
+                return 'Rp ' + number.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); 
             }
         }"
         x-init="$watch('jumlahInduk', (newVal, oldVal) => {
             const newSize = Number(newVal) || 0;
             const oldSize = hargaInduk.length;
+
+            // Tambah input harga baru jika jumlah induk bertambah
             if (newSize > oldSize) {
                 for (let i = oldSize; i < newSize; i++) {
                     hargaInduk.push('Rp '); // Tambah input harga baru
                 }
-            } else if (newSize < oldSize) {
+            } 
+            // Hapus input harga jika jumlah induk berkurang
+            else if (newSize < oldSize) {
                 hargaInduk.splice(newSize); // Hapus input harga berlebih
             }
         })">
@@ -119,7 +129,7 @@
             {{-- Tampilan Form Input Ternak --}}
             <div x-show="showTernakForm" x-transition class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
-                    <label class="block text-xs font-medium text-gray-800">Jumlah Induk</label>
+                    <label class="block text-xs font-medium text-gray-800">Jumlah Induk Ternak</label>
                     
                     <div class="relative w-full mt-1"> 
                         
@@ -162,6 +172,10 @@
                 </template>
             </div>
         </div>
+        
+        {{-- ================================================================ --}}
+        {{-- ===================== AKHIR BLOK DINAMIS TERNAK ==================== --}}
+        {{-- ================================================================ --}}
 
         {{-- Tempat & Tanggal Lahir --}}
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">

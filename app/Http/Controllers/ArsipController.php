@@ -14,7 +14,7 @@ class ArsipController extends Controller
     public function index()
     {
         try {
-            
+            // PERBAIKAN: Menggunakan LEFT JOIN untuk menggabungkan data arsip dan status dalam satu query
             $arsipsPerTahun = DB::table('arsips')
                 ->select('arsips.tahun', DB::raw('COUNT(arsips.id) as jumlah'), 'status_tahunan.status')
                 ->leftJoin('status_tahunan', 'arsips.tahun', '=', 'status_tahunan.tahun')
@@ -22,7 +22,7 @@ class ArsipController extends Controller
                 ->orderByDesc('arsips.tahun')
                 ->get();
 
-            // Mengatur status arsip (progress)
+            // Atur status default menjadi 'progress' jika belum ada di tabel status_tahunan
             $arsipsPerTahun->transform(function ($item) {
                 $item->status = $item->status ?? 'progress';
                 return $item;
@@ -31,7 +31,7 @@ class ArsipController extends Controller
             return view('arsip', compact('arsipsPerTahun'));
         } catch (\Exception $e) {
             Log::error('Gagal memuat halaman arsip tahunan: ' . $e->getMessage());
-            // Redirect halaman error 
+            // Redirect atau tampilkan halaman error yang lebih informatif
             return back()->with('error', 'Tidak dapat memuat data arsip. Silakan coba lagi.');
         }
     }
@@ -39,7 +39,7 @@ class ArsipController extends Controller
 
     public function byYear($tahun)
     {
-        // Mengambil semua arsip berdasarkan tahun tertentu
+        // Ambil semua arsip berdasarkan tahun tertentu
         $arsips = Arsip::where('tahun', $tahun)
             ->orderBy('bulan', 'asc')
             ->get();
@@ -49,7 +49,7 @@ class ArsipController extends Controller
 
     public function show(Arsip $arsip)
     {
-        // Tampilkan file PDF 
+        // Tampilkan file PDF yang diminta
         return Storage::response($arsip->path_file);
     }
 
@@ -59,31 +59,41 @@ class ArsipController extends Controller
             $tahun = $arsip->tahun;
             $bulan = $arsip->bulan;
 
+            // 🔥 PERBAIKAN: Cek apakah ini arsip TERBARU berdasarkan created_at
             $arsipTerbaru = Arsip::orderBy('created_at', 'desc')->first();
             
             $iniArsipTerbaru = ($arsipTerbaru && $arsipTerbaru->id == $arsip->id);
 
+            // 1. Hapus file fisik dari storage
             Storage::delete($arsip->path_file);
 
+            // 2. Hapus record dari database
             $arsip->delete();
 
+            // 3. 🔥 HANYA buka kembali pencatatan jika ini ARSIP TERBARU
             if ($iniArsipTerbaru) {
                 
-  
+                // =======================================================
+                // 🔥 PENGAMAN BARU (Mulai)
+                // =======================================================
+                // Cek apakah SUDAH ADA siklus baru yang aktif.
                 $adaSiklusBaruAktif = Pencatatan::withoutGlobalScopes()
                                             ->where('is_locked', false)
                                             ->exists();
                 
                 if ($adaSiklusBaruAktif) {
-                  
+                    // JANGAN DIBUKA! Siklus baru sedang berjalan.
+                    // Cukup log pesan ini untuk developer.
                     \Log::warning('Arsip terbaru dihapus, TAPI pencatatan TIDAK dibuka kembali karena siklus baru sudah aktif.', [
                         'arsip_id_dihapus' => $arsip->id,
                         'tahun' => $tahun,
                         'bulan' => $bulan
                     ]);
 
+                    // Langsung lompat ke langkah 4
+                
                 } else {
-                 
+                    // INI AMAN. Tidak ada siklus baru, kita boleh buka lock siklus lama.
                     Pencatatan::whereYear('tanggal_catatan', $tahun)
                               ->whereMonth('tanggal_catatan', $bulan)
                               ->update(['is_locked' => false]);
@@ -94,6 +104,9 @@ class ArsipController extends Controller
                         'bulan' => $bulan
                     ]);
                 }
+                // =======================================================
+                // 🔥 PENGAMAN BARU (Selesai)
+                // =======================================================
                 
             } else {
                 \Log::info('Arsip lama dihapus, pencatatan tetap locked', [
@@ -103,14 +116,17 @@ class ArsipController extends Controller
                 ]);
             }
 
+            // 4. Cek apakah masih ada arsip lain di tahun yang sama
             $sisaArsip = Arsip::where('tahun', $tahun)->count();
 
+            // 5. Jika tidak ada arsip yang tersisa, kembalikan statusnya menjadi 'progress'
             if ($sisaArsip === 0) {
                 DB::table('status_tahunan')
                     ->where('tahun', $tahun)
                     ->update(['status' => 'progress']);
             }
 
+            // Pesan suksesnya sekarang lebih aman, tidak menyebut "dibuka kembali" kecuali benar-fbenar terjadi
             return redirect()->route('arsip.tahun', $tahun)
                 ->with('success', 'Arsip berhasil dihapus.');
                 
@@ -121,10 +137,11 @@ class ArsipController extends Controller
     }
 
     
+
     public function validasi($tahun)
     {
         try {
-            
+            // Menggunakan updateOrInsert: update jika tahun sudah ada, insert jika belum ada.
             \DB::table('status_tahunan')->updateOrInsert(
                 ['tahun' => $tahun],
                 ['status' => 'selesai', 'updated_at' => now()]

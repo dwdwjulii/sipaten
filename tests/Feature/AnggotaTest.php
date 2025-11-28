@@ -134,7 +134,7 @@ class AnggotaTest extends TestCase
     
     // Memastikan penghapusan anggota juga menghapus semua data relasinya (ternak dan pencatatan).
     /** @test */
-    public function test_anggota_deletion_removes_related_data()
+    public function anggota_deletion_removes_related_data()
     {
         $anggota = Anggota::factory()->withPencatatanPlaceholder()->create(['tahap_id' => $this->tahap->id]);
         $ternak = $anggota->ternaks->first();

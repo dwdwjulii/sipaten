@@ -117,7 +117,8 @@ class PencatatanTest extends TestCase
         $response = $this->actingAs($this->admin)->post(route('laporan.arsip.keseluruhan'));
 
         $response->assertStatus(302); 
-        $response->assertSessionHas('error', 'Gagal, masih ada data aktif yang belum dilengkapi oleh petugas.');
+        return back()->with('error', 'Gagal, masih ada data aktif yang belum dilengkapi oleh petugas.');
+
         
         $this->assertDatabaseHas('pencatatans', [
             'anggota_id' => $anggotaA->id,

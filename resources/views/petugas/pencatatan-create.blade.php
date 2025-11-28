@@ -713,7 +713,7 @@
                 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">Tipe Ternak</label>
-                    <select name="ternaks[${arrayKey}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs" onchange="updateTernakSummary()">
+                    <select name="ternaks[${arrayKey}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs" onchange="updateTernakSummary()">
                         <option value="Induk">Induk</option>
                         <option value="Anak" selected>Anak</option>
                     </select>
@@ -721,7 +721,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">Jenis Kelamin</label>
-                    <select name="ternaks[${arrayKey}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
+                    <select name="ternaks[${arrayKey}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
                         <option value="">Pilih Kelamin</option>
                         <option value="Jantan">Jantan</option>
                         <option value="Betina">Betina</option>
@@ -730,7 +730,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">No Ear Tag</label>
-                    <select name="ternaks[${arrayKey}][no_ear_tag]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
+                    <select name="ternaks[${arrayKey}][no_ear_tag]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
                         <option value="">Pilih Ear Tag</option>    
                         <option value="Ada">Ada</option>
                         <option value="Tidak Ada">Tidak Ada</option>
@@ -739,14 +739,14 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">Umur</label>
-                    <input type="text" name="ternaks[${arrayKey}][umur_ternak]" class="mt-1 block w-full border-gray-300 placeholder:text-red-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs" placeholder="Contoh: 6 bulan">
+                    <input type="text" name="ternaks[${arrayKey}][umur_ternak]" class="mt-1 block w-full border-gray-300 placeholder:text-red-500 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs" placeholder="Contoh: 6 bulan">
                 </div>
                 
                 <div class="md:col-span-2 grid grid-cols-2 gap-3">
                     {{-- REVISI: Mengubah KONDISI menjadi dropdown --}}
                     <div>
                         <label class="block text-xs font-medium text-gray-700">Kondisi</label>
-                        <select name="ternaks[${arrayKey}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
+                        <select name="ternaks[${arrayKey}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
                             <option value="">Pilih Kondisi</option>       
                             <option value="Sehat">Sehat</option>
                             <option value="Sakit">Sakit</option>
@@ -757,7 +757,7 @@
                     {{-- REVISI: Mengubah STATUS VAKSIN menjadi dropdown --}}
                     <div>
                         <label class="block text-xs font-medium text-gray-700">Status Vaksin</label>
-                         <select name="ternaks[${arrayKey}][status_vaksin]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
+                         <select name="ternaks[${arrayKey}][status_vaksin]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
                             <option value="">Pilih Kondisi</option>  
                             <option value="Sudah">Sudah</option>
                             <option value="Belum">Belum</option>

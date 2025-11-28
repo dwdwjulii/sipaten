@@ -40,21 +40,26 @@ class AnggotaController extends Controller
 
         $search = $request->input('search');
         $query->when($search, function ($q, $search) {
+            // Ganti 'nama_lengkap' dan 'nik' sesuai nama kolom di tabel anggota Anda
             return $q->where('nama', 'like', '%' . $search . '%')
                     ->orWhere('lokasi_kandang', 'like', '%' . $search . '%');
         });
         
-        // Ambil nilai 'per_page' dari request, default-nya 10
+        // 1. Ambil nilai 'per_page' dari request, default-nya 10
         $perPage = $request->input('per_page', 10);
 
-        // Handle jika user memilih 'Semua'
+        // 2. Handle jika user memilih 'Semua'
         if ($perPage == 'Semua') {
+            // Hitung total data yang cocok dengan query filter saat ini
             $total = $query->count();
+            // Gunakan total sebagai jumlah per halaman, atau 10 jika tidak ada data
             $perPage = $total > 0 ? $total : 10;
         } else {
+            // Pastikan nilainya adalah integer
             $perPage = (int) $perPage;
         }
 
+        // 3. Gunakan variabel $perPage di dalam method paginate()
         $anggotas = $query->paginate($perPage);
         
         return view('anggota', compact('anggotas', 'tahaps', 'tahapDipilih'));
@@ -62,7 +67,7 @@ class AnggotaController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi data utama dan data ternak awal
+        // 1. Validasi data utama dan data ternak awal
         $validated = $request->validate([
             'tahap_id' => 'required|exists:tahaps,id',
             'nama' => 'required|string|max:255',
@@ -79,7 +84,7 @@ class AnggotaController extends Controller
 
         DB::beginTransaction();
         try {
-            // anggota baru
+            // 2. Buat anggota baru
             $anggota = Anggota::create([
                 'tahap_id' => $validated['tahap_id'],
                 'nama' => $validated['nama'],
@@ -92,11 +97,13 @@ class AnggotaController extends Controller
                 'status' => $validated['status'],
             ]);
 
-            // Buat record untuk setiap induk awal di tabel ternaks
+            // 3. Buat record untuk setiap induk awal di tabel ternaks
             foreach ($validated['ternak_awal'] as $dataInduk) {
                 $anggota->ternaks()->create([
                     'tipe_ternak' => 'Induk',
                     'harga' => $dataInduk['harga'],
+                    // Anda bisa menambahkan nilai default lain di sini jika perlu
+                    // 'jenis_kelamin', 'tanggal_lahir', dll. bisa dilengkapi petugas nanti
                 ]);
             }
 
@@ -115,7 +122,7 @@ class AnggotaController extends Controller
                                                 ->whereYear('tanggal_catatan', $tahunIni)
                                                 ->exists();
 
-                // Hanya buat placeholder jika belum diarsip dan belum ada placeholder
+                // Hanya buat placeholder jika belum diarsip DAN belum ada placeholder
                 if (!$sudahDiarsip && !$sudahAdaPlaceholder) {
                     Pencatatan::create([
                         'anggota_id'      => $anggota->id,
@@ -140,7 +147,8 @@ class AnggotaController extends Controller
     public function update(Request $request, $id)
     {
         $anggota = Anggota::findOrFail($id);
-
+        
+        // 1. Validasi disederhanakan: Kita tidak butuh validasi 'jumlah_induk' lagi
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'tahap_id' => 'required|exists:tahaps,id',
@@ -159,7 +167,7 @@ class AnggotaController extends Controller
 
             $tanggalLahir = \Carbon\Carbon::createFromFormat('d/m/Y', $validated['tanggal_lahir'])->format('Y-m-d');
 
-            // Update data utama anggota 
+            // 2. Update data utama anggota (tanpa 'jumlah_induk')
             $anggota->update([
                 'nama' => $validated['nama'],
                 'tahap_id' => $validated['tahap_id'],
@@ -171,15 +179,20 @@ class AnggotaController extends Controller
                 'status' => $validated['status'],
             ]);
 
+            // Logika untuk menangani perubahan status (sudah benar)
+
             if ($anggota->wasChanged('status')) {
                 if ($anggota->status === 'non-aktif') {
+                    // Hapus pencatatan aktif jika dinonaktifkan
                     $anggota->pencatatans()->where('is_locked', false)->delete();
                 } 
                 elseif ($anggota->status === 'aktif') {
-
+                    // 🔥 PERBAIKAN DI SINI: Handle Kasus Sistem Kosong
+                    
                     $timestampSiklusTerbaru = Pencatatan::withoutGlobalScopes()->max('tanggal_catatan');
                     
                     if ($timestampSiklusTerbaru) {
+                        // KASUS A: Sudah ada data pencatatan lain di sistem
                         $siklusTerbaruAktif = Pencatatan::withoutGlobalScopes()
                             ->where('tanggal_catatan', $timestampSiklusTerbaru)
                             ->where('is_locked', false)
@@ -194,16 +207,25 @@ class AnggotaController extends Controller
                             if (!$placeholderExists) {
                                 Pencatatan::create([
                                     'anggota_id' => $anggota->id,
-                                    'tanggal_catatan' => $timestampSiklusTerbaru,
+                                    'tanggal_catatan' => $timestampSiklusTerbaru, // Ikut tanggal siklus yg ada
                                     'is_locked' => false,
                                 ]);
                             }
                         }
+                    } else {
+                        // 🔥 KASUS B (BUG FIX): Sistem Kosong / Data Pertama
+                        // Jika max() null, berarti belum ada pencatatan sama sekali (atau baru dihapus).
+                        // Maka kita buatkan pencatatan baru untuk hari ini.
+                        Pencatatan::create([
+                            'anggota_id' => $anggota->id,
+                            'tanggal_catatan' => now(), // Gunakan waktu sekarang
+                            'is_locked' => false,
+                        ]);
                     }
                 }
             }
 
-            // 
+            // 3. Logika update ternak yang SANGAT disederhanakan
             $submittedPrices = $request->input('harga_induk', []);
             $cleanPrices = []; // Ini akan menampung harga yang valid (tidak kosong)
 
@@ -228,57 +250,63 @@ class AnggotaController extends Controller
                 ->orderBy('created_at', 'asc')
                 ->get();
 
-            // Update ternak yang ada / Hapus atau Nonaktifkan kelebihan
+            // 3a. Update ternak yang ada / Hapus atau Nonaktifkan kelebihan
             foreach ($existingInduks as $index => $ternak) {
                 if (isset($cleanPrices[$index])) {
                     // Skenario 1: Ternak masih ada -> Update harga
                     $cleanHarga = (int) str_replace(['Rp ', '.'], '', $cleanPrices[$index]);
                     $ternak->update(['harga' => $cleanHarga]);
                 } else {
+                    // Skenario 2: Ternak dikurangi -> Cek riwayat SECARA MANUAL
                     
-                    $punyaRiwayat = false; 
+                    $punyaRiwayat = false; // Asumsi awal: tidak punya riwayat
 
-                    // Cek apakah punya anak
+                    // 2a. Cek apakah punya anak
                     if ($ternak->anak->count() > 0) {
                         $punyaRiwayat = true;
                     }
 
-                    // Cek apakah punya detail pencatatan 
-                    if (!$punyaRiwayat) { 
+                    // 2b. Cek apakah punya detail pencatatan YANG TERISI
+                    if (!$punyaRiwayat) { // Hanya cek jika belum ketemu riwayat
                         foreach ($ternak->pencatatanDetails as $detail) {
-
+                            
+                            // Gunakan !empty() untuk cek NULL, "", 0, dll.
                             if (!empty($detail->kondisi_ternak) || 
                                 !empty($detail->status_vaksin) || 
                                 !empty($detail->umur_saat_dicatat)) 
                             {
+                                // Baris ini TERISI, berarti ini riwayat!
                                 $punyaRiwayat = true;
-                                break; // Stop perulangan
+                                break; // Stop perulangan, sudah cukup bukti
                             }
                         }
                     }
 
-                    // delete
+                    // =======================================================
+                    // 3. KEPUTUSAN AKHIR (HARD DELETE vs SOFT DELETE)
+                    // =======================================================
                     if ($punyaRiwayat) {
-                        // soft delete
+                        // Punya riwayat -> SOFT DELETE (Nonaktifkan)
                         $ternak->update(['status_aktif' => 'non-aktif']);
                     } else {
-                        // Tidak punya riwayat (hard delete) 
+                        // Tidak punya riwayat -> HARD DELETE (Hapus permanen)
                         
-                        // Hapus placeholder null
+                        // 1. Hapus dulu baris placeholder kosong
                         $ternak->pencatatanDetails()->delete();
                         
-                        // delete ternak
+                        // 2. Sekarang hapus ternaknya
                         $ternak->delete();
                     }
                 }
             }
 
-            // Tambah ternak baru jika jumlahnya lebih banyak
+            // 3b. Tambah ternak baru jika jumlahnya lebih banyak
             if ($newCount > $existingInduks->count()) {
                 // Ambil hanya harga-harga BARU (yang diinput setelah ternak yang sudah ada)
                 $newPrices = array_slice($cleanPrices, $existingInduks->count());
 
-                // Cek apakah ada siklus aktif saat ini
+                // 🔥 PERBAIKAN UTAMA: Gunakan logika siklus yang konsisten
+                // 1. Cek apakah ada siklus aktif saat ini
                 $timestampSiklusTerbaru = Pencatatan::withoutGlobalScopes()->max('tanggal_catatan');
                 $siklusTerbaruAktif = false;
                 $activePencatatan = null;
@@ -307,7 +335,7 @@ class AnggotaController extends Controller
                         'status_aktif'=> 'aktif',
                     ]);
 
-                    // Auto-create placeholder jika belum ada
+                    // 🔥 PERBAIKAN KRITIS: Auto-create placeholder jika belum ada
                     if ($siklusTerbaruAktif && $anggota->status === 'aktif') {
                         // Jika anggota ini belum punya placeholder di siklus aktif
                         if (!$activePencatatan) {
@@ -325,6 +353,8 @@ class AnggotaController extends Controller
                             ]);
                         }
                         
+                        // 🔥 PERBAIKAN: Hanya tambahkan detail jika pencatatan sudah pernah diisi
+                        // (Ini mencegah error ketika placeholder masih kosong)
                         if ($activePencatatan->details()->exists()) {
                             \App\Models\PencatatanDetail::create([
                                 'pencatatan_id'     => $activePencatatan->id,
@@ -343,12 +373,13 @@ class AnggotaController extends Controller
                 }
             }
 
+            // 4. Hitung ulang dan sinkronisasi jumlah induk (SELALU dijalankan)
             $jumlahIndukAktif = Ternak::where('anggota_id', $anggota->id)
                                     ->where('tipe_ternak', 'Induk')
                                     ->where('status_aktif', 'aktif')
                                     ->count();
         
-            // Update kolom 'jumlah_induk'
+            // Update kolom 'jumlah_induk' dengan angka yang 100% akurat dari database
             $anggota->update(['jumlah_induk' => $jumlahIndukAktif]);
             
             DB::commit();

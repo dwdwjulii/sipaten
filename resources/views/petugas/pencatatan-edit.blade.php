@@ -102,12 +102,15 @@
                                 @foreach ($groupedDetails as $group)
 
                                     {{-- ======================================================= --}}
-                                    {{-- Tipe 1: Grup untuk Induk yang Masih Aktif & Anaknya  --}}
+                                    {{-- Tipe 1: Grup untuk Induk yang Masih Aktif & Anaknya     --}}
                                     {{-- ======================================================= --}}
                                     @if ($group['type'] === 'active_parent')
                                         @php
                                             $indukDetail = $group['induk'];
                                             $anakDetailsCollection = $group['anak'];
+                                            
+                                            // 🔥 PERBAIKAN KUNCI ARRAY: Gunakan 'ternak_id' agar unik dan tidak null
+                                            $arrayKey = 'ternak_' . $indukDetail->ternak_id;
                                         @endphp
                                         <div class="bg-white shadow rounded-lg ternak-group mb-4">
                                             {{-- Header Card --}}
@@ -126,53 +129,66 @@
                                                 {{-- Data Induk --}}
                                                 <div class="mb-6">
                                                     <h4 class="text-sm font-semibold text-gray-800 mb-3">Data Induk</h4>
-                                                    <input type="hidden" name="ternaks[{{ $indukDetail->id }}][detail_id]" value="{{ $indukDetail->id }}">
+                                                    
+                                                    {{-- 🔥 INPUT HIDDEN PENTING (FIXED) --}}
+                                                    {{-- 1. detail_id: Kosong jika data baru (dummy), Ada ID jika data lama --}}
+                                                    <input type="hidden" name="ternaks[{{ $arrayKey }}][detail_id]" value="{{ $indukDetail->id ?? '' }}">
+                                                    {{-- 2. ternak_id: WAJIB ADA untuk referensi update --}}
+                                                    <input type="hidden" name="ternaks[{{ $arrayKey }}][ternak_id]" value="{{ $indukDetail->ternak_id }}">
                                                     
                                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        
+                                                        {{-- Tipe Ternak (Kembali ke Dropdown Biasa / Tidak di-disable) --}}
                                                         <div>
                                                             <label class="block text-xs font-medium text-gray-700">Tipe Ternak</label>
-                                                            <select name="ternaks[{{ $indukDetail->id }}][tipe_ternak]" 
-                                                                class="tipe-ternak-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                            <select name="ternaks[{{ $arrayKey }}][tipe_ternak]" 
+                                                                class="tipe-ternak-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs" 
+                                                                onchange="updateTernakSummary()">
                                                                 <option value="Induk" {{ $indukDetail->ternak->tipe_ternak == 'Induk' ? 'selected' : '' }}>Induk</option>
                                                                 <option value="Anak" {{ $indukDetail->ternak->tipe_ternak == 'Anak' ? 'selected' : '' }}>Anak</option>
                                                             </select>
                                                         </div>
+
+                                                        {{-- Gunakan $arrayKey untuk semua input di bawah ini --}}
                                                         <div>
                                                             <label class="block text-xs font-medium text-gray-700">Jenis Kelamin</label>
-                                                            <select name="ternaks[{{ $indukDetail->id }}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                <option value="">Pilih Kelamin</option>   
+                                                            <select name="ternaks[{{ $arrayKey }}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                <option value="">Pilih Kelamin</option>
                                                                 <option value="Jantan" {{ $indukDetail->ternak->jenis_kelamin == 'Jantan' ? 'selected' : '' }}>Jantan</option>
                                                                 <option value="Betina" {{ $indukDetail->ternak->jenis_kelamin == 'Betina' ? 'selected' : '' }}>Betina</option>
                                                             </select>
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs font-medium text-gray-700">No Ear Tag</label>
-                                                            <select name="ternaks[{{ $indukDetail->id }}][no_ear_tag]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                <option value="">Pilih Ear Tag</option>   
+                                                            <select name="ternaks[{{ $arrayKey }}][no_ear_tag]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                <option value="">Pilih Ear Tag</option>    
                                                                 <option value="Ada" {{ $indukDetail->ternak->no_ear_tag == 'Ada' ? 'selected' : '' }}>Ada</option>
                                                                 <option value="Tidak Ada" {{ $indukDetail->ternak->no_ear_tag == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
                                                             </select>
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs font-medium text-gray-700">Umur</label>
-                                                            <input type="text" name="ternaks[{{ $indukDetail->id }}][umur_ternak]" value="{{ old('ternaks.'.$indukDetail->id.'.umur_ternak', $indukDetail->umur_saat_dicatat) }}" class="mt-1 block w-full border-gray-300 placeholder:text-red-500 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs" placeholder="Contoh: 6 bulan">
+                                                            {{-- Perhatikan value old() nya juga menggunakan arrayKey --}}
+                                                            <input type="text" name="ternaks[{{ $arrayKey }}][umur_ternak]" 
+                                                                value="{{ old('ternaks.'.$arrayKey.'.umur_ternak', $indukDetail->umur_saat_dicatat) }}" 
+                                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs placeholder:text-red-500" placeholder="Contoh: 6 bulan">
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs font-medium text-gray-700">Kondisi</label>
-                                                            <select name="ternaks[{{ $indukDetail->id }}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                            <select name="ternaks[{{ $arrayKey }}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
                                                                 <option value="">Pilih Kondisi</option>
-                                                                <option value="Sehat" {{ old('ternaks.'.$indukDetail->id.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Sehat' ? 'selected' : '' }}>Sehat</option>
-                                                                <option value="Sakit" {{ old('ternaks.'.$indukDetail->id.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Sakit' ? 'selected' : '' }}>Sakit</option>
-                                                                <option value="Mati" {{ old('ternaks.'.$indukDetail->id.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Mati' ? 'selected' : '' }}>Mati</option>
-                                                                <option value="Terjual" {{ old('ternaks.'.$indukDetail->id.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Terjual' ? 'selected' : '' }}>Terjual</option>
+                                                                <option value="Sehat" {{ old('ternaks.'.$arrayKey.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Sehat' ? 'selected' : '' }}>Sehat</option>
+                                                                <option value="Sakit" {{ old('ternaks.'.$arrayKey.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                                                                <option value="Mati" {{ old('ternaks.'.$arrayKey.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Mati' ? 'selected' : '' }}>Mati</option>
+                                                                <option value="Terjual" {{ old('ternaks.'.$arrayKey.'.kondisi_ternak', $indukDetail->kondisi_ternak) == 'Terjual' ? 'selected' : '' }}>Terjual</option>
                                                             </select>
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs font-medium text-gray-700">Status Vaksin</label>
-                                                            <select name="ternaks[{{ $indukDetail->id }}][status_vaksin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                            <select name="ternaks[{{ $arrayKey }}][status_vaksin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
                                                                 <option value="">Pilih Vaksin</option>
-                                                                <option value="Sudah" {{ old('ternaks.'.$indukDetail->id.'.status_vaksin', $indukDetail->status_vaksin) == 'Sudah' ? 'selected' : '' }}>Sudah</option>
-                                                                <option value="Belum" {{ old('ternaks.'.$indukDetail->id.'.status_vaksin', $indukDetail->status_vaksin) == 'Belum' ? 'selected' : '' }}>Belum</option>
+                                                                <option value="Sudah" {{ old('ternaks.'.$arrayKey.'.status_vaksin', $indukDetail->status_vaksin) == 'Sudah' ? 'selected' : '' }}>Sudah</option>
+                                                                <option value="Belum" {{ old('ternaks.'.$arrayKey.'.status_vaksin', $indukDetail->status_vaksin) == 'Belum' ? 'selected' : '' }}>Belum</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -181,58 +197,70 @@
                                                 {{-- Container untuk anak-anak --}}
                                                 <div id="anakContainer-{{ $group['group_index'] }}" class="space-y-3">
                                                     @foreach($anakDetailsCollection as $anakDetail)
-                                                    <div class="anak-section" id="existing-detail-{{ $anakDetail->id }}">
-                                                        <div class="flex justify-between items-center mb-3">
-                                                            <h4 class="text-sm font-semibold text-gray-800">Data Anak Ternak</h4>
-                                                            <button type="button" onclick="removeExistingDetail('{{ $anakDetail->id }}')" class="text-red-500 hover:text-red-700 transition-colors">
-                                                                <i class="fas fa-times"></i> Hapus
-                                                            </button>
+                                                        @php
+                                                            // 🔥 PERBAIKAN KUNCI ARRAY ANAK
+                                                            $anakKey = 'ternak_' . $anakDetail->ternak_id;
+                                                        @endphp
+                                                        <div class="anak-section" id="existing-detail-{{ $anakDetail->id ?? $anakDetail->ternak_id }}">
+                                                            <div class="flex justify-between items-center mb-3">
+                                                                <h4 class="text-sm font-semibold text-gray-800">Data Anak Ternak</h4>
+                                                                <button type="button" onclick="removeExistingDetail('{{ $anakDetail->id }}')" class="text-red-500 hover:text-red-700 transition-colors">
+                                                                    <i class="fas fa-times"></i> Hapus
+                                                                </button>
+                                                            </div>
+
+                                                            {{-- Hidden Inputs Anak (FIXED) --}}
+                                                            <input type="hidden" name="ternaks[{{ $anakKey }}][detail_id]" value="{{ $anakDetail->id ?? '' }}">
+                                                            <input type="hidden" name="ternaks[{{ $anakKey }}][ternak_id]" value="{{ $anakDetail->ternak_id }}">
+
+                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700">Tipe Ternak</label>
+                                                                    <select name="ternaks[{{ $anakKey }}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                        <option value="Induk" {{ $anakDetail->ternak->tipe_ternak == 'Induk' ? 'selected' : '' }}>Induk</option>
+                                                                        <option value="Anak" {{ $anakDetail->ternak->tipe_ternak == 'Anak' ? 'selected' : '' }}>Anak</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700">Jenis Kelamin</label>
+                                                                    <select name="ternaks[{{ $anakKey }}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                        <option value="">Pilih Kelamin</option>   
+                                                                        <option value="Jantan" {{ $anakDetail->ternak->jenis_kelamin == 'Jantan' ? 'selected' : '' }}>Jantan</option>
+                                                                        <option value="Betina" {{ $anakDetail->ternak->jenis_kelamin == 'Betina' ? 'selected' : '' }}>Betina</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700">No Ear Tag</label>
+                                                                    <select name="ternaks[{{ $anakKey }}][no_ear_tag]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                        <option value="">Pilih Ear Tag</option> 
+                                                                        <option value="Ada" {{ $anakDetail->ternak->no_ear_tag == 'Ada' ? 'selected' : '' }}>Ada</option>
+                                                                        <option value="Tidak Ada" {{ $anakDetail->ternak->no_ear_tag == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700">Umur</label>
+                                                                    <input type="text" name="ternaks[{{ $anakKey }}][umur_ternak]" value="{{ old('ternaks.'.$anakKey.'.umur_ternak', $anakDetail->umur_saat_dicatat) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs placeholder:text-red-500" placeholder="Contoh: 6 bulan">
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700">Kondisi</label>
+                                                                    <select name="ternaks[{{ $anakKey }}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                        <option value="">Pilih Kondisi</option>
+                                                                        <option value="Sehat" {{ old('ternaks.'.$anakKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sehat' ? 'selected' : '' }}>Sehat</option>
+                                                                        <option value="Sakit" {{ old('ternaks.'.$anakKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                                                                        <option value="Mati" {{ old('ternaks.'.$anakKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Mati' ? 'selected' : '' }}>Mati</option>
+                                                                        <option value="Terjual" {{ old('ternaks.'.$anakKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Terjual' ? 'selected' : '' }}>Terjual</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700">Status Vaksin</label>
+                                                                    <select name="ternaks[{{ $anakKey }}][status_vaksin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                        <option value="">Pilih Vaksin</option>    
+                                                                        <option value="Sudah" {{ old('ternaks.'.$anakKey.'.status_vaksin', $anakDetail->status_vaksin) == 'Sudah' ? 'selected' : '' }}>Sudah</option>
+                                                                        <option value="Belum" {{ old('ternaks.'.$anakKey.'.status_vaksin', $anakDetail->status_vaksin) == 'Belum' ? 'selected' : '' }}>Belum</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <input type="hidden" name="ternaks[{{ $anakDetail->id }}][detail_id]" value="{{ $anakDetail->id }}">
-                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                            <div>
-                                                                <label class="block text-xs font-medium text-gray-700">Tipe Ternak</label>
-                                                                <select name="ternaks[{{ $anakDetail->id }}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                    <option value="Induk" {{ $anakDetail->ternak->tipe_ternak == 'Induk' ? 'selected' : '' }}>Induk</option>
-                                                                    <option value="Anak" {{ $anakDetail->ternak->tipe_ternak == 'Anak' ? 'selected' : '' }}>Anak</option>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="block text-xs font-medium text-gray-700">Jenis Kelamin</label>
-                                                                <select name="ternaks[{{ $anakDetail->id }}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                    <option value="Jantan" {{ $anakDetail->ternak->jenis_kelamin == 'Jantan' ? 'selected' : '' }}>Jantan</option>
-                                                                    <option value="Betina" {{ $anakDetail->ternak->jenis_kelamin == 'Betina' ? 'selected' : '' }}>Betina</option>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="block text-xs font-medium text-gray-700">No Ear Tag</label>
-                                                                <select name="ternaks[{{ $anakDetail->id }}][no_ear_tag]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                    <option value="Ada" {{ $anakDetail->ternak->no_ear_tag == 'Ada' ? 'selected' : '' }}>Ada</option>
-                                                                    <option value="Tidak Ada" {{ $anakDetail->ternak->no_ear_tag == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="block text-xs font-medium text-gray-700">Umur</label>
-                                                                <input type="text" name="ternaks[{{ $anakDetail->id }}][umur_ternak]" value="{{ old('ternaks.'.$anakDetail->id.'.umur_ternak', $anakDetail->umur_saat_dicatat) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                            </div>
-                                                            <div>
-                                                                <label class="block text-xs font-medium text-gray-700">Kondisi</label>
-                                                                <select name="ternaks[{{ $anakDetail->id }}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                    <option value="Sehat" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sehat' ? 'selected' : '' }}>Sehat</option>
-                                                                    <option value="Sakit" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sakit' ? 'selected' : '' }}>Sakit</option>
-                                                                    <option value="Mati" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Mati' ? 'selected' : '' }}>Mati</option>
-                                                                    <option value="Terjual" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Terjual' ? 'selected' : '' }}>Terjual</option>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="block text-xs font-medium text-gray-700">Status Vaksin</label>
-                                                                <select name="ternaks[{{ $anakDetail->id }}][status_vaksin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                    <option value="Sudah" {{ old('ternaks.'.$anakDetail->id.'.status_vaksin', $anakDetail->status_vaksin) == 'Sudah' ? 'selected' : '' }}>Sudah</option>
-                                                                    <option value="Belum" {{ old('ternaks.'.$anakDetail->id.'.status_vaksin', $anakDetail->status_vaksin) == 'Belum' ? 'selected' : '' }}>Belum</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                     @endforeach
                                                 </div>
                                             </div>
@@ -240,67 +268,79 @@
                                     @endif
 
                                     {{-- =================================================== --}}
-                                    {{-- Tipe 2: Grup Khusus untuk Anak "Yatim"           --}}
+                                    {{-- Tipe 2: Grup Khusus untuk Anak "Yatim"              --}}
                                     {{-- =================================================== --}}
                                     @if ($group['type'] === 'orphan')
                                         <div class="bg-white shadow rounded-lg ternak-group mb-4">
                                             <div class="p-4 border-b border-gray-200">
-                                                <h3 class="text-lg font-semibold text-gray-900">Data Ternak Lanjutan (Induk Tidak Tercatat)</h3>
+                                                <h3 class="text-lg font-semibold text-gray-900">Data Ternak Lanjutan (Induk Tidak Aktif)</h3>
                                             </div>
                                             <div class="p-6">
                                                 @foreach($group['anak'] as $anakDetail)
-                                                <div class="anak-section" id="existing-detail-{{ $anakDetail->id }}" style="border-left-color: #f97316;">
-                                                    <div class="flex justify-between items-center mb-3">
-                                                        <h4 class="text-sm font-semibold text-gray-800">Data Anak Ternak</h4>
-                                                        <button type="button" onclick="removeExistingDetail('{{ $anakDetail->id }}')" class="text-red-500 hover:text-red-700 transition-colors">
-                                                            <i class="fas fa-times"></i> Hapus
-                                                        </button>
+                                                    @php
+                                                        // 🔥 PERBAIKAN KUNCI ARRAY ORPHAN
+                                                        $orphanKey = 'ternak_' . $anakDetail->ternak_id;
+                                                    @endphp
+                                                    <div class="anak-section" id="existing-detail-{{ $anakDetail->id ?? $anakDetail->ternak_id }}" style="border-left-color: #f97316;">
+                                                        <div class="flex justify-between items-center mb-3">
+                                                            <h4 class="text-sm font-semibold text-gray-800">Data Anak Ternak</h4>
+                                                            <button type="button" onclick="removeExistingDetail('{{ $anakDetail->id }}')" class="text-red-500 hover:text-red-700 transition-colors">
+                                                                <i class="fas fa-times"></i> Hapus
+                                                            </button>
+                                                        </div>
+
+                                                        {{-- Hidden Inputs (FIXED) --}}
+                                                        <input type="hidden" name="ternaks[{{ $orphanKey }}][detail_id]" value="{{ $anakDetail->id ?? '' }}">
+                                                        <input type="hidden" name="ternaks[{{ $orphanKey }}][ternak_id]" value="{{ $anakDetail->ternak_id }}">
+
+                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label class="block text-xs font-medium text-gray-700">Tipe Ternak</label>
+                                                                <select name="ternaks[{{ $orphanKey }}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                    <option value="Induk" {{ $anakDetail->ternak->tipe_ternak == 'Induk' ? 'selected' : '' }}>Induk</option>
+                                                                    <option value="Anak" {{ $anakDetail->ternak->tipe_ternak == 'Anak' ? 'selected' : '' }}>Anak</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-medium text-gray-700">Jenis Kelamin</label>
+                                                                <select name="ternaks[{{ $orphanKey }}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                    <option value="">Pilih Kelamin</option>   
+                                                                    <option value="Jantan" {{ $anakDetail->ternak->jenis_kelamin == 'Jantan' ? 'selected' : '' }}>Jantan</option>
+                                                                    <option value="Betina" {{ $anakDetail->ternak->jenis_kelamin == 'Betina' ? 'selected' : '' }}>Betina</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-medium text-gray-700">No Ear Tag</label>
+                                                                <select name="ternaks[{{ $orphanKey }}][no_ear_tag]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                    <option value="">Pilih Ear Tag</option> 
+                                                                    <option value="Ada" {{ $anakDetail->ternak->no_ear_tag == 'Ada' ? 'selected' : '' }}>Ada</option>
+                                                                    <option value="Tidak Ada" {{ $anakDetail->ternak->no_ear_tag == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-medium text-gray-700">Umur</label>
+                                                                <input type="text" name="ternaks[{{ $orphanKey }}][umur_ternak]" value="{{ old('ternaks.'.$orphanKey.'.umur_ternak', $anakDetail->umur_saat_dicatat) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs placeholder:text-red-500" placeholder="Contoh: 6 bulan">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-medium text-gray-700">Kondisi</label>
+                                                                <select name="ternaks[{{ $orphanKey }}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                    <option value="">Pilih Kondisi</option>
+                                                                    <option value="Sehat" {{ old('ternaks.'.$orphanKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sehat' ? 'selected' : '' }}>Sehat</option>
+                                                                    <option value="Sakit" {{ old('ternaks.'.$orphanKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                                                                    <option value="Mati" {{ old('ternaks.'.$orphanKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Mati' ? 'selected' : '' }}>Mati</option>
+                                                                    <option value="Terjual" {{ old('ternaks.'.$orphanKey.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Terjual' ? 'selected' : '' }}>Terjual</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-medium text-gray-700">Status Vaksin</label>
+                                                                <select name="ternaks[{{ $orphanKey }}][status_vaksin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
+                                                                    <option value="">Pilih Vaksin</option>
+                                                                    <option value="Sudah" {{ old('ternaks.'.$orphanKey.'.status_vaksin', $anakDetail->status_vaksin) == 'Sudah' ? 'selected' : '' }}>Sudah</option>
+                                                                    <option value="Belum" {{ old('ternaks.'.$orphanKey.'.status_vaksin', $anakDetail->status_vaksin) == 'Belum' ? 'selected' : '' }}>Belum</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <input type="hidden" name="ternaks[{{ $anakDetail->id }}][detail_id]" value="{{ $anakDetail->id }}">
-                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                        <div>
-                                                            <label class="block text-xs font-medium text-gray-700">Tipe Ternak</label>
-                                                            <select name="ternaks[{{ $anakDetail->id }}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                <option value="Induk" {{ $anakDetail->ternak->tipe_ternak == 'Induk' ? 'selected' : '' }}>Induk</option>
-                                                                <option value="Anak" {{ $anakDetail->ternak->tipe_ternak == 'Anak' ? 'selected' : '' }}>Anak</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs font-medium text-gray-700">Jenis Kelamin</label>
-                                                            <select name="ternaks[{{ $anakDetail->id }}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                <option value="Jantan" {{ $anakDetail->ternak->jenis_kelamin == 'Jantan' ? 'selected' : '' }}>Jantan</option>
-                                                                <option value="Betina" {{ $anakDetail->ternak->jenis_kelamin == 'Betina' ? 'selected' : '' }}>Betina</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs font-medium text-gray-700">No Ear Tag</label>
-                                                            <select name="ternaks[{{ $anakDetail->id }}][no_ear_tag]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                <option value="Ada" {{ $anakDetail->ternak->no_ear_tag == 'Ada' ? 'selected' : '' }}>Ada</option>
-                                                                <option value="Tidak Ada" {{ $anakDetail->ternak->no_ear_tag == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs font-medium text-gray-700">Umur</label>
-                                                            <input type="text" name="ternaks[{{ $anakDetail->id }}][umur_ternak]" value="{{ old('ternaks.'.$anakDetail->id.'.umur_ternak', $anakDetail->umur_saat_dicatat) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs font-medium text-gray-700">Kondisi</label>
-                                                            <select name="ternaks[{{ $anakDetail->id }}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                <option value="Sehat" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sehat' ? 'selected' : '' }}>Sehat</option>
-                                                                <option value="Sakit" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Sakit' ? 'selected' : '' }}>Sakit</option>
-                                                                <option value="Mati" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Mati' ? 'selected' : '' }}>Mati</option>
-                                                                <option value="Terjual" {{ old('ternaks.'.$anakDetail->id.'.kondisi_ternak', $anakDetail->kondisi_ternak) == 'Terjual' ? 'selected' : '' }}>Terjual</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs font-medium text-gray-700">Status Vaksin</label>
-                                                            <select name="ternaks[{{ $anakDetail->id }}][status_vaksin]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
-                                                                <option value="Sudah" {{ old('ternaks.'.$anakDetail->id.'.status_vaksin', $anakDetail->status_vaksin) == 'Sudah' ? 'selected' : '' }}>Sudah</option>
-                                                                <option value="Belum" {{ old('ternaks.'.$anakDetail->id.'.status_vaksin', $anakDetail->status_vaksin) == 'Belum' ? 'selected' : '' }}>Belum</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                                 @endforeach
                                             </div>
                                         </div>
@@ -613,7 +653,7 @@
                 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">Tipe Ternak</label>
-                    <select name="ternaks[${arrayKey}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs" onchange="updateTernakSummary()">
+                    <select name="ternaks[${arrayKey}][tipe_ternak]" class="tipe-ternak-select mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs" onchange="updateTernakSummary()">
                         <option value="Induk">Induk</option>
                         <option value="Anak" selected>Anak</option>
                     </select>
@@ -621,8 +661,8 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">Jenis Kelamin</label>
-                    <select name="ternaks[${arrayKey}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
-                        <option value="">Pilih Kelamin</option>
+                    <select name="ternaks[${arrayKey}][jenis_kelamin]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
+                         <option value="">Pilih Kelamin</option>
                         <option value="Jantan">Jantan</option>
                         <option value="Betina">Betina</option>
                     </select>
@@ -630,8 +670,8 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">No Ear Tag</label>
-                    <select name="ternaks[${arrayKey}][no_ear_tag]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
-                        <option value="">Pilih Ear Tag</option>   
+                    <select name="ternaks[${arrayKey}][no_ear_tag]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
+                        <option value="">Pilih Ear Tag</option>  
                         <option value="Ada">Ada</option>
                         <option value="Tidak Ada">Tidak Ada</option>
                     </select>
@@ -639,15 +679,15 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-700">Umur</label>
-                    <input type="text" name="ternaks[${arrayKey}][umur_ternak]" class="mt-1 block w-full border-gray-300 placeholder:text-red-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs" placeholder="Contoh: 6 bulan">
+                    <input type="text" name="ternaks[${arrayKey}][umur_ternak]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs placeholder:text-red-500" placeholder="Contoh: 6 bulan">
                 </div>
                 
                 <div class="md:col-span-2 grid grid-cols-2 gap-3">
                     {{-- REVISI: Mengubah KONDISI menjadi dropdown --}}
                     <div>
                         <label class="block text-xs font-medium text-gray-700">Kondisi</label>
-                        <select name="ternaks[${arrayKey}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
-                            <option value="">Pilih Kondisi</option>  
+                        <select name="ternaks[${arrayKey}][kondisi_ternak]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
+                             <option value="">Pilih Kondisi</option> 
                             <option value="Sehat">Sehat</option>
                             <option value="Sakit">Sakit</option>
                             <option value="Mati">Mati</option>
@@ -657,8 +697,8 @@
                     {{-- REVISI: Mengubah STATUS VAKSIN menjadi dropdown --}}
                     <div>
                         <label class="block text-xs font-medium text-gray-700">Status Vaksin</label>
-                         <select name="ternaks[${arrayKey}][status_vaksin]" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs">
-                            <option value="">Pilih Vaksin</option>   
+                         <select name="ternaks[${arrayKey}][status_vaksin]" class="mt-1 block w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm text-xs">
+                            <option value="">Pilih Vaksin</option>    
                             <option value="Sudah">Sudah</option>
                             <option value="Belum">Belum</option>
                         </select>
@@ -808,7 +848,7 @@
             });
         }
 
-       function handleFileSelect(input) {
+        function handleFileSelect(input) {
             const validFiles = [];
 
             Array.from(input.files).forEach(file => {
@@ -842,8 +882,6 @@
 
             input.value = '';
         }
-
-
 
         function removeSelectedFile(index) {
             selectedFiles.splice(index, 1);
@@ -888,7 +926,6 @@
             });
         }
 
-
         function clearAllPhotos() {
             Swal.fire({
                 title: 'Hapus Semua Foto?',
@@ -922,7 +959,6 @@
                 }
             });
         }
-
 
         function updateFormFileInput() {
             const fileInput = document.getElementById('foto_dokumentasi');

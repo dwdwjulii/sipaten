@@ -15,12 +15,12 @@ class TahapTest extends TestCase
     public function label_format_is_correct()
     {
         $tahap = Tahap::factory()->create([
-            'tahap_ke' => 'Tahap 1',
+            'tahap_ke' => '1',
             'tahun' => 2025
         ]);
 
         $label = $tahap->label;
 
-        $this->assertEquals("Tahap 1 (2025)", $label);
+        $this->assertEquals("1 (2025)", $label);
     }
 }

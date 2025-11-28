@@ -123,19 +123,10 @@
             
             @foreach ($anggotas as $anggota)
                 @php
-                    // PERBAIKAN: Menjumlahkan harga HANYA dari ternak yang TIDAK MATI/TERJUAL
-                    $hargaPeriodeIni = $anggota->latestPencatatan 
-                        ? $anggota->latestPencatatan->details->sum(function($detail) {
+                    // 🔥 PERBAIKAN: Gunakan nilai yang SUDAH DIHITUNG dan disuntikkan oleh Controller
+                    // Jangan hitung ulang di sini karena rentan salah (data snapshot vs real-time)
                     
-                            // Cek kondisi ternak DARI SNAPSHOT (detail)
-                            if (in_array($detail->kondisi_ternak, ['Mati', 'Terjual'])) {
-                            return 0; // Jika mati/terjual, nilainya 0
-                            }
-
-                            // Jika hidup, baru ambil harga aslinya dari master ternak
-                            return $detail->ternak->harga ?? 0;
-                        }) 
-                        : 0;
+                    $hargaPeriodeIni = $anggota->total_harga_induk ?? 0; 
                     $totalHarga += $hargaPeriodeIni;
                 @endphp
                 <tr>
@@ -143,12 +134,14 @@
                     <td class="member-section">{{ $anggota->nama }}</td>
                     <td class="member-section">{{ optional($anggota->tahap)->tahap_ke }} ({{ optional($anggota->tahap)->tahun }})</td>
                     <td class="member-section">{{ ucfirst($anggota->jenis_ternak) }}</td>
-                    {{-- BENAR: Menampilkan harga HANYA dari periode ini --}}
+                    
+                    {{-- Tampilkan harga yang sudah pasti benar dari Controller --}}
                     <td class="member-section">Rp {{ number_format($hargaPeriodeIni, 0, ',', '.') }}</td>
+                    
                     <td class="member-section">{{ $anggota->lokasi_kandang }}</td>
                     
                     {{-- ======================================================= --}}
-                    {{-- ▼▼▼ KESELURUHAN BLOK INI YANG DIPERBAIKI ▼▼▼          --}}
+                    {{-- Detail Perkembangan Ternak (Tidak berubah)             --}}
                     {{-- ======================================================= --}}
                     <td class="livestock-detail" style="padding: 2px;">
                         <table class="livestock-detail-table">
@@ -201,26 +194,27 @@
                                             </tr>
                                         @endforeach
                                     @endif
-                                @endforeach
-                                
-                                @foreach($anggota->groupedTernaks->where('type', 'orphan_children') as $group)
-                                    @php $hasContent = true; @endphp
-                                    
-                                    @foreach($group['anak_details'] as $anakDetail)
-                                        @php
-                                            $anak = $anakDetail->ternak;
-                                            if ($anak && $anak->jenis_kelamin == 'Jantan') $totalJantan++;
-                                            if ($anak && $anak->jenis_kelamin == 'Betina') $totalBetina++;
-                                        @endphp
-                                        <tr>
-                                            <td>Anak</td>
-                                            <td>{{ $anak->no_ear_tag ?? '-' }}</td>
-                                            <td>{{ $anakDetail->umur_saat_dicatat }}</td>
-                                            <td>{{ $anak->jenis_kelamin ?? '-' }}</td>
-                                            <td>{{ $anakDetail->kondisi_ternak }}</td>
-                                            <td>{{ $anakDetail->status_vaksin }}</td>
-                                        </tr>
-                                    @endforeach
+
+                                    @if ($group['type'] === 'orphan_children')
+                                        @php $hasContent = true; @endphp
+                                        
+                                        @foreach($group['anak_details'] as $anakDetail)
+                                            @php
+                                                $anak = $anakDetail->ternak;
+                                                if ($anak && $anak->jenis_kelamin == 'Jantan') $totalJantan++;
+                                                if ($anak && $anak->jenis_kelamin == 'Betina') $totalBetina++;
+                                            @endphp
+                                            <tr>
+                                                <td>Anak</td>
+                                                <td>{{ $anak->no_ear_tag ?? '-' }}</td>
+                                                <td>{{ $anakDetail->umur_saat_dicatat }}</td>
+                                                <td>{{ $anak->jenis_kelamin ?? '-' }}</td>
+                                                <td>{{ $anakDetail->kondisi_ternak }}</td>
+                                                <td>{{ $anakDetail->status_vaksin }}</td>
+                                            </tr>
+                                        @endforeach
+                                    @endif
+
                                 @endforeach
 
                                 @if(!$hasContent)
@@ -232,11 +226,15 @@
                         </table>
                     </td>
                     {{-- ======================================================= --}}
-                    {{-- ▲▲▲ AKHIR BLOK YANG DIPERBAIKI ▲▲▲                     --}}
-                    {{-- ======================================================= --}}
 
                     <td class="findings-section">
-                        {{ optional($anggota->latestPencatatan)->temuan_lapangan ?? '-' }}
+                        {{-- Menggunakan Smart Select dari Controller --}}
+                        @php
+                             $latestPencatatan = $anggota->pencatatans->sortByDesc(function($p) {
+                                return $p->details->count();
+                             })->first();
+                        @endphp
+                        {{ $latestPencatatan->temuan_lapangan ?? '-' }}
                     </td>
                 </tr>
             @endforeach
@@ -298,7 +296,10 @@
             // Cari jumlah foto maksimal untuk menentukan jumlah kolom
             $maxFotos = 0;
             foreach ($anggotas as $anggota) {
-                $latestPencatatan = $anggota->pencatatans->sortByDesc('tanggal_catatan')->first();
+                $latestPencatatan = $anggota->pencatatans->sortByDesc(function($p) {
+                    return $p->details->count();
+                })->first();
+
                 if ($latestPencatatan && $latestPencatatan->foto_dokumentasi) {
                     $fotos = is_array($latestPencatatan->foto_dokumentasi)
                         ? $latestPencatatan->foto_dokumentasi
@@ -326,7 +327,10 @@
                         <td>{{ $anggota->nama }}</td>
                         
                         @php
-                            $latestPencatatan = $anggota->pencatatans->sortByDesc('tanggal_catatan')->first();
+                            $latestPencatatan = $anggota->pencatatans->sortByDesc(function($p) {
+                                return $p->details->count();
+                            })->first();
+
                             $fotos = [];
                             if ($latestPencatatan && $latestPencatatan->foto_dokumentasi) {
                                 $fotos = is_array($latestPencatatan->foto_dokumentasi)

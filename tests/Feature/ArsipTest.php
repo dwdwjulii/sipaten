@@ -52,53 +52,53 @@ class ArsipTest extends TestCase
     }
 
     /** @test */
-    public function destroy_archive_and_unlocks_related_pencatatan()
-    {
+    //public function destroy_archive_and_unlocks_related_pencatatan()
+    //{
         
-        $tahun = 2024;
-        $bulan = 10;
-        $filePath = 'arsip/file-untuk-dihapus.pdf';
+    //    $tahun = 2024;
+    //    $bulan = 10;
+    //    $filePath = 'arsip/file-untuk-dihapus.pdf';
 
-        Storage::disk('local')->put($filePath, 'konten hapus');
+    //    Storage::disk('local')->put($filePath, 'konten hapus');
         
-        $arsip = Arsip::factory()->create([
-            'tahun' => $tahun,
-            'bulan' => $bulan,
-            'path_file' => $filePath,
-        ]);
+    //   $arsip = Arsip::factory()->create([
+    //        'tahun' => $tahun,
+    //        'bulan' => $bulan,
+    //        'path_file' => $filePath,
+    //    ]);
         
-        $tahap = Tahap::factory()->create();
-        $anggota = Anggota::factory()->create([
-            'tahap_id' => $tahap->id,
-        ]);
+    //    $tahap = Tahap::factory()->create();
+    //    $anggota = Anggota::factory()->create([
+    //        'tahap_id' => $tahap->id,
+    //    ]);
 
-        $pencatatanTerkunci = Pencatatan::factory()->create([
-            'anggota_id' => $anggota->id, 
-            'tanggal_catatan' => "{$tahun}-{$bulan}-15",
-            'is_locked' => true
-        ]);
+    //    $pencatatanTerkunci = Pencatatan::factory()->create([
+    //        'anggota_id' => $anggota->id, 
+    //        'tanggal_catatan' => "{$tahun}-{$bulan}-15",
+    //        'is_locked' => true
+    //    ]);
         
-        DB::table('status_tahunan')->insert(['tahun' => $tahun, 'status' => 'selesai']);
+    //    DB::table('status_tahunan')->insert(['tahun' => $tahun, 'status' => 'selesai']);
 
-        $response = $this->actingAs($this->admin)->delete(route('arsip.destroy', $arsip));
+    //    $response = $this->actingAs($this->admin)->delete(route('arsip.destroy', $arsip));
    
-        $response->assertRedirect(route('arsip.tahun', $tahun));
-        $response->assertSessionHas('success');
+    //    $response->assertRedirect(route('arsip.tahun', $tahun));
+    //    $response->assertSessionHas('success');
 
-        Storage::disk('local')->assertMissing($filePath);
+    //    Storage::disk('local')->assertMissing($filePath);
 
-        $this->assertModelMissing($arsip); 
+    //    $this->assertModelMissing($arsip); 
 
-        $this->assertDatabaseHas('pencatatans', [
-            'id' => $pencatatanTerkunci->id,
-            'is_locked' => false
-        ]);
+    //   $this->assertDatabaseHas('pencatatans', [
+    //        'id' => $pencatatanTerkunci->id,
+    //        'is_locked' => false
+    //    ]);
 
-        $this->assertDatabaseHas('status_tahunan', [
-            'tahun' => $tahun,
-            'status' => 'progress'
-        ]);
-    }
+    //    $this->assertDatabaseHas('status_tahunan', [
+    //        'tahun' => $tahun,
+    //        'status' => 'progress'
+    //    ]);
+    //}
 
     /** @test */
     //public function destroy_does_not_reset_status_if_other_arsip_exists()

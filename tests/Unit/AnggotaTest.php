@@ -64,7 +64,7 @@ class AnggotaTest extends TestCase
 
     // Memastikan harga induk default-nya nol jika tidak ada ternak.
     /** @test */
-    public function total_harga_induk_is_zero_when_no_ternak_exists()
+    public function total_harga_is_zero_when_no_ternak_exists()
     {
         $anggota = Anggota::factory()->create(['tahap_id' => $this->tahap->id]);
 
@@ -73,7 +73,7 @@ class AnggotaTest extends TestCase
 
     // // Memastikan ternak non-Induk tidak dihitung.
     /** @test */
-    public function total_harga_induk_is_zero_when_only_non_induk_exists()
+    public function total_harga_is_zero_when_only_non_induk_exists()
     {
         $anggota = Anggota::factory()->create(['tahap_id' => $this->tahap->id]);
 
@@ -98,7 +98,7 @@ class AnggotaTest extends TestCase
 
     // Memastikan ternak Induk dengan status non-aktif (mati/terjual) tidak dihitung.
     /** @test */
-    public function total_harga_induk_is_zero_when_only_non_active_induk_exists()
+    public function total_harga_is_zero_when_only_non_active_induk_exists()
     {
         $anggota = Anggota::factory()->create(['tahap_id' => $this->tahap->id]);
 

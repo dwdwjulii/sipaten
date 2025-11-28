@@ -268,63 +268,78 @@
                                     {{ $anggota->tahap?->label ?? 'Tanpa Tahap' }}
                                 </span>
 
-                                {{-- 🚩 PERBAIKAN: Logika Status yang Konsisten dengan Controller --}}
-                                @if($anggota->latestPencatatan)
-                                    @if($anggota->latestPencatatan->is_locked)
+                                {{-- 🔥 LOGIKA PENTING: PENGAMAN GHOST RECORD (Sama seperti Admin) --}}
+                                @php
+                                    // 1. Cek apakah relation 'pencatatans' sudah di-load dari Controller
+                                    // 2. Sortir descending berdasarkan jumlah detail
+                                    // 3. Ambil yang pertama (Ini akan memprioritaskan record Tgl 26 yg berisi, dibanding Tgl 27 yg kosong)
+                                    
+                                    $pencatatan = null;
+                                    if ($anggota->relationLoaded('pencatatans')) {
+                                        $pencatatan = $anggota->pencatatans->sortByDesc(function($p) {
+                                            return $p->details->count();
+                                        })->first();
+                                    }
+                                    
+                                    // Fallback aman
+                                    if (!$pencatatan) {
+                                        $pencatatan = $anggota->latestPencatatan;
+                                    }
+
+                                    // 🔥 LOGIKA BARU: STATUS DINAMIS (PERLU UPDATE)
+                                    $jumlahTernakAktif = $anggota->ternaks_count ?? 0;
+                                    $jumlahDetailLengkap = 0;
+                                    $detailsExistAndFilled = false;
+
+                                    if ($pencatatan) {
+                                        // Filter detail yang isinya tidak kosong
+                                        $filledDetails = $pencatatan->details->filter(function($detail) {
+                                            return !empty($detail->kondisi_ternak);
+                                        });
+                                        
+                                        $detailsExistAndFilled = $filledDetails->isNotEmpty();
+
+                                        // Hitung detail yang valid (Ternaknya masih aktif)
+                                        // Pastikan Controller memuat 'details.ternak' agar akurat
+                                        $jumlahDetailLengkap = $filledDetails->filter(function($detail) {
+                                            if ($detail->ternak) {
+                                                return $detail->ternak->status_aktif === 'aktif';
+                                            }
+                                            return true; // Fallback jika relasi ternak belum di-load
+                                        })->count();
+                                    }
+                                @endphp
+
+                                {{-- TAMPILAN STATUS (BADGE) --}}
+                                @if($pencatatan)
+                                    @if($pencatatan->is_locked)
                                         {{-- 1. Status Arsip (Terkunci) --}}
                                         <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
                                             Arsip
                                         </span>
                                     @else
                                         {{-- 2. Status Aktif (Belum Terkunci) --}}
-                                        @php
-                                            $pencatatan = $anggota->latestPencatatan;
-                                            
-                                            // Hitung ternak aktif SAAT INI (real-time)
-                                            $jumlahTernakAktifSekarang = $anggota->ternaks()
-                                                ->where('status_aktif', 'aktif')
-                                                ->count();
-                                            
-                                            // Hitung detail yang sudah dicatat DAN ternaknya masih aktif
-                                            $jumlahDetailAktifTercatat = 0;
-                                            $pernahAdaDetail = false;
-                                            
-                                            if ($pencatatan) {
-                                                // Cek apakah pernah ada detail yang terisi
-                                                $pernahAdaDetail = $pencatatan->details->filter(function($detail) {
-                                                    return !empty($detail->kondisi_ternak);
-                                                })->isNotEmpty();
-                                                
-                                                // Hitung detail yang terisi DAN ternaknya masih aktif
-                                                $jumlahDetailAktifTercatat = $pencatatan->details->filter(function($detail) {
-                                                    return !empty($detail->kondisi_ternak) && 
-                                                        $detail->ternak && 
-                                                        $detail->ternak->status_aktif === 'aktif';
-                                                })->count();
-                                            }
-                                        @endphp
-
-                                        @if($jumlahTernakAktifSekarang > 0 && !$pernahAdaDetail)
-                                            {{-- ERROR: Ada ternak aktif tapi belum pernah dicatat sama sekali --}}
-                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                                        @if(!$detailsExistAndFilled)
+                                            {{-- Belum ada detail sama sekali --}}
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">
                                                 Belum Dicatat
                                             </span>
-                                        @elseif($pernahAdaDetail && $jumlahDetailAktifTercatat < $jumlahTernakAktifSekarang)
-                                            {{-- WARNING: Pernah dicatat tapi ada ternak baru yang belum tercatat --}}
+                                        @elseif($jumlahDetailLengkap < $jumlahTernakAktif)
+                                            {{-- Ada detail, tapi jumlahnya kurang dari ternak aktif (Induk baru masuk) --}}
                                             <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-800">
                                                 Perlu Update
                                             </span>
                                         @else
-                                            {{-- SUCCESS: Semua lengkap atau tidak ada ternak aktif --}}
+                                            {{-- Lengkap --}}
                                             <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
                                                 Sudah Dicatat
                                             </span>
                                         @endif
                                     @endif
                                 @else
-                                    {{-- 3. Tidak ada placeholder pencatatan sama sekali --}}
+                                    {{-- Tidak ada data placeholder sama sekali --}}
                                     <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">
-                                        Tidak Ada Data
+                                        Belum Dicatat
                                     </span>
                                 @endif
                             </div>
@@ -357,27 +372,32 @@
                             </div>
 
                             {{-- ======================================================= --}}
-                            {{-- BAGIAN TOMBOL CARD --}}
+                            {{-- BAGIAN TOMBOL AKSI --}}
                             {{-- ======================================================= --}}
                             <div class="p-4 mt-auto border-t rounded-b-lg border-gray-200 bg-gray-50">
-                                {{-- 🚩 PERBAIKAN 2: Gunakan latestPencatatan secara konsisten di sini juga --}}
-                                @if($anggota->latestPencatatan)
-                                    @if($anggota->latestPencatatan->is_locked)
+                                
+                                @if($pencatatan)
+                                    @if($pencatatan->is_locked)
+                                        {{-- KASUS 1: Terkunci --}}
                                         <button disabled class="block w-full text-center px-3 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-md cursor-not-allowed">
                                             Terkunci
                                         </button>
-                                    @elseif($anggota->latestPencatatan->details->isEmpty())
+
+                                    @elseif(!$detailsExistAndFilled)
+                                        {{-- KASUS 2: Aktif tapi Kosong -> Link ke Create --}}
                                         <a href="{{ route('pencatatan.create', $anggota) }}" class="block w-full text-center px-3 py-2 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">
                                             + Buat Catatan
                                         </a>
+
                                     @else
-                                        <a href="{{ route('pencatatan.edit', $anggota->latestPencatatan) }}" class="block w-full text-center px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                                            Lihat / Edit Catatan
+                                        {{-- KASUS 3: Aktif dan Sudah Terisi (Termasuk Perlu Update) -> Link ke Edit --}}
+                                        {{-- 🔥 PENTING: Kita link ke ID record yang dipilih 'Smart Select', bukan record hantu --}}
+                                        <a href="{{ route('pencatatan.edit', $pencatatan->id) }}" class="block w-full text-center px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                                            {{ $jumlahDetailLengkap < $jumlahTernakAktif ? 'Lengkapi Catatan' : 'Lihat / Edit Catatan' }}
                                         </a>
                                     @endif
                                 @else
-                                    {{-- Kondisi ini idealnya tidak akan pernah terjadi jika Reset berfungsi benar,
-                                        tapi sebagai pengaman, kita tetap berikan tombol Create --}}
+                                    {{-- KASUS 4: Belum ada record -> Link ke Create --}}
                                     <a href="{{ route('pencatatan.create', $anggota) }}" class="block w-full text-center px-3 py-2 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">
                                         + Buat Catatan
                                     </a>
