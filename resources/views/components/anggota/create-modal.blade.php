@@ -38,8 +38,8 @@
         {{-- Nama --}}
         <div>
             <label class="block text-xs font-medium text-gray-800">Nama Anggota</label>
-            <input type="text" name="nama" value="{{ old('nama') }}" required
-                class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+            <input type="text" name="nama" value="{{ old('nama') }}" placeholder="Contoh: Komang Kuniawan" required
+                class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
         </div>
 
         {{-- Jenis Ternak --}}
@@ -53,7 +53,7 @@
             <button type="button" @click="open = !open"
                 class="w-full px-2 py-2 mt-1 text-xs text-left text-gray-800 capitalize bg-white border border-gray-200 rounded-md">
                 <span x-text="jenis ? jenis : 'Pilih jenis ternak'" 
-                    :class="jenis ? 'text-gray-800' : 'text-gray-400'"></span>
+                    :class="jenis ? 'text-gray-800' : 'text-gray-600'"></span>
 
                 <svg class="float-right w-4 h-4 text-gray-500 transition-transform duration-200 transform"
                     :class="open ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -180,8 +180,8 @@
                         type="text" 
                         :value="formatRupiah(hargaInduk[index - 1])"
                         @input="updateHarga($event, index - 1)"
-                        placeholder="Rp 0"
-                        class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500"
+                        placeholder="Contoh: 1000000"
+                        class="block w-full mt-1 text-xs placeholder-gray-600 text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500"
                     >
 
                     {{-- Input hidden (nilai angka bersih untuk server) --}}
@@ -199,14 +199,14 @@
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
                 <label class="block text-xs font-medium text-gray-800">Tempat Lahir</label>
-                <input type="text" name="tempat_lahir" value="{{ old('tempat_lahir') }}" required
-                    class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+                <input type="text" name="tempat_lahir" value="{{ old('tempat_lahir') }}" placeholder="Contoh: Jinengdalem" required
+                    class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-800">Tanggal Lahir</label>
                 <input id="tanggal_lahir" name="tanggal_lahir" type="text" value="{{ old('tanggal_lahir') }}"
                     datepicker datepicker-format="dd/mm/yyyy" required
-                    class="block w-full mt-1 text-xs text-gray-800 bg-white border-gray-200 rounded-md focus:ring-0 focus:border-green-500"
+                    class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 bg-white border-gray-200 rounded-md focus:ring-0 focus:border-green-500"
                     placeholder="DD/MM/YYYY">
             </div>
         </div>
@@ -215,9 +215,9 @@
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
                 <label class="block text-xs font-medium text-gray-800">No HP</label>
-                <input type="tel" name="no_hp" value="{{ old('no_hp') }}" required
+                <input type="tel" name="no_hp" value="{{ old('no_hp') }}" placeholder="Contoh: 087003456789" required
                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,15)"
-                    class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+                    class="block w-full mt-1 text-xs text-gray-800 border-gray-200 placeholder-gray-600 rounded-md focus:ring-0 focus:border-green-500" />
             </div>
             <div x-data="{ open: false, status: '{{ old('status', 'aktif') }}' }" class="relative">
                 <label class="block text-xs font-medium text-gray-800">Status</label>
@@ -245,8 +245,8 @@
         {{-- Lokasi Kandang --}}
         <div>
             <label class="block text-xs font-medium text-gray-800">Lokasi Kandang</label>
-            <input type="text" name="lokasi_kandang" value="{{ old('lokasi_kandang') }}" required
-                class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+            <input type="text" name="lokasi_kandang" value="{{ old('lokasi_kandang') }}" placeholder="Contoh: BD.Kaje" required
+                class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
         </div>
 
         {{-- Footer (dalam form, agar submit berfungsi) --}}

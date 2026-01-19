@@ -9,8 +9,8 @@
 
                 @if($statusKeseluruhan == 'error')
                     {{-- Case 1: Masih ada catatan kosong (MERAH) --}}
-                    <x-alert-status type="error" title="Status Catatan Ternak: Perlu Tindakan!" :messages="[
-                        ['text' => 'Masih terdapat laporan data catatan ternak yang belum dilengkapi oleh Petugas Lapangan.', 'status' => 'error']
+                    <x-alert-status type="info" title="Status Catatan Ternak: Perlu Tindakan!" :messages="[
+                        ['text' => 'Masih terdapat laporan data catatan ternak yang belum dilengkapi oleh Petugas Lapangan.', 'status' => 'info']
                     ]" />
                 
                 @elseif($statusKeseluruhan == 'warning')
@@ -300,7 +300,7 @@
 
                                         @else
                                             {{-- 4. Belum Dicatat (Merah) --}}
-                                            <span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
+                                            <span class="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
                                                 Belum Dicatat
                                             </span>
                                         @endif

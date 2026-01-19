@@ -18,7 +18,9 @@
                         {{-- Filter Tahap --}}
                         <div x-data="{ open: false }" class="relative inline-block text-left">
                             <button @click="open = !open"
-                                class="flex items-center space-x-1 px-3 w-36 justify-between py-1.5 text-sm font-normal text-gray-800 bg-white border border-gray-200 rounded-lg focus:ring-green-500 focus:border-green-500 focus:ring-0">
+                                class="flex items-center space-x-1 px-3 w-36 justify-between py-1.5 text-sm font-normal text-gray-800 bg-white border border-gray-200 rounded-lg focus:ring-green-500 focus:border-green-500 focus:ring-0"
+                                title="Pilih tahap untuk memfilter daftar anggota"
+                                data-tooltip="Pilih tahap untuk memfilter daftar anggota">
                                 <span class="whitespace-normal break-words text-left">
                                     {{ $tahapDipilih ? $tahapDipilih->label : 'Pilih Tahap' }}
                                 </span>
@@ -37,7 +39,8 @@
                                     <li class="border-b border-gray-100">
                                         <form action="{{ route('anggota.index') }}" method="GET">
                                             <button type="submit"
-                                                class="w-full text-left px-4 py-2 text-xs hover:bg-green-100 hover:rounded-t-md">
+                                                class="w-full text-left px-4 py-2 text-xs hover:bg-green-100 hover:rounded-t-md"
+                                                title="Tampilkan semua anggota dari semua tahap">
                                                 Semua Tahap
                                             </button>
                                         </form>
@@ -52,7 +55,8 @@
                                             <form action="{{ route('anggota.index') }}" method="GET" class="flex-grow">
                                                 <input type="hidden" name="tahap_id" value="{{ $tahap->id }}">
                                                 <button type="submit"
-                                                    class="w-full text-left text-xs whitespace-normal break-words">
+                                                    class="w-full text-left text-xs whitespace-normal break-words"
+                                                    title="Filter anggota tahap {{ $tahap->label }}">
                                                     {{ $tahap->label }}
                                                 </button>
                                             </form>
@@ -66,7 +70,8 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                        class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                                        class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity mt-1"
+                                                        title="Hapus tahap {{ $tahap->label }}">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5"
                                                             viewBox="0 0 20 20" fill="currentColor">
                                                             <path fill-rule="evenodd"
@@ -80,7 +85,8 @@
                                     </li>
                                     @endforeach
                                     {{-- Opsi untuk menambah tahap baru --}}
-                                    <li class="border-t rounded-b-lg border-gray-100 sticky bottom-0 bg-white">
+                                   <li class="border-t rounded-b-lg border-gray-100 sticky bottom-0 bg-white"
+                                    title="Tambahkan tahap baru untuk pengelolaan anggota">
                                         <x-anggota.tahap-modal />
                                     </li>
                                 </ul>
@@ -158,7 +164,7 @@
                                         class="px-2 py-0 text-xs rounded-lg bg-green-200 text-green-700 border border-green-400 font-semibold">Aktif</span>
                                     @else
                                     <span
-                                        class="px-2 py-0 text-xs rounded-lg bg-red-200 text-red-700 border border-red-400 font-semibold">Non-Aktif</span>
+                                        class="px-2 py-0 text-xs rounded-lg bg-orange-200 text-orange-700 border border-orange-400 font-semibold">Non-Aktif</span>
                                     @endif
                                 </td>
                                 <td class="px-2 py-3 border border-gray-100 ">

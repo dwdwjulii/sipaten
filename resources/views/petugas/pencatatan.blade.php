@@ -321,17 +321,17 @@
                                         {{-- 2. Status Aktif (Belum Terkunci) --}}
                                         @if(!$detailsExistAndFilled)
                                             {{-- Belum ada detail sama sekali --}}
-                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
                                                 Belum Dicatat
                                             </span>
                                         @elseif($jumlahDetailLengkap < $jumlahTernakAktif)
                                             {{-- Ada detail, tapi jumlahnya kurang dari ternak aktif (Induk baru masuk) --}}
-                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-800">
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-600">
                                                 Perlu Update
                                             </span>
                                         @else
                                             {{-- Lengkap --}}
-                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-600">
                                                 Sudah Dicatat
                                             </span>
                                         @endif

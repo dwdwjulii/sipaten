@@ -41,8 +41,8 @@
         <div>
             <label class="block text-xs font-medium text-gray-800">Nama Pengguna</label>
             <input type="text" name="name"
-                class="mt-1 block w-full rounded-md border-gray-200 text-gray-800   placeholder-gray-800 focus:ring-0 focus:border-green-500 text-xs"
-                placeholder="Masukkan nama lengkap" required>
+                class="mt-1 block w-full rounded-md border-gray-200 text-gray-800 placeholder-gray-600 focus:ring-0 focus:border-green-500 text-xs"
+                placeholder="Contoh: Komang Kurniawan" required>
         </div>
 
         {{-- Email (Username) + Role --}}
@@ -50,8 +50,8 @@
             <div class="col-span-3">
                 <label class="block text-xs font-medium text-gray-800">Email (Username)</label>
                 <input type="email" name="email"
-                    class="mt-1 block w-full rounded-md text-gray-800placeholder-gray-800 border-gray-200 focus:ring-0 focus:border-green-500 text-xs"
-                    placeholder="contoh@email.com" required>
+                    class="mt-1 block w-full rounded-md text-gray-800 placeholder-gray-600 border-gray-200 focus:ring-0 focus:border-green-500 text-xs"
+                    placeholder="Contoh: @email.com" required>
             </div>
 
             {{-- Dropdown Role (default 'petugas') --}}
@@ -82,31 +82,94 @@
         {{-- Password + Status --}}
         <div class="grid grid-cols-4 gap-3">
             {{-- Password + Toggle pakai AlpineJS --}}
-            <div class="col-span-3 relative" x-data="{ show: false }">
+            <div class="col-span-3 relative" x-data="{ show: false, strength: 0, strengthText: '', strengthColor: '' }">
                 <label class="block text-xs font-medium text-gray-800">Password</label>
-                <input :type="show ? 'text' : 'password'" name="password"
-                    class="mt-1 block w-full rounded-md text-gray-800placeholder-gray-800 border-gray-200 focus:ring-0 focus:border-green-500 text-xs"
-                    placeholder="••••••••" required>
-                <span class="absolute inset-y-0 right-3 flex items-center cursor-pointer mt-5" @click="show = !show">
-                    {{-- Eye Open --}}
-                    <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
-                        class="w-4 h-4 text-gray-800">
-                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                        <path fill-rule="evenodd"
-                            d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    {{-- Eye Closed --}}
-                    <svg x-show="show" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
-                        class="w-4 h-4 text-gray-800">
-                        <path
-                            d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
-                        <path
-                            d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z" />
-                        <path
-                            d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z" />
-                    </svg>
-                </span>
+                <div class="relative">
+                    <input :type="show ? 'text' : 'password'" name="password"
+                        class="mt-1 block w-full pr-10 rounded-md text-gray-800 placeholder-gray-600 border-gray-200 focus:ring-0 focus:border-green-500 text-xs"
+                        placeholder="••••••••" 
+                        @input="
+                            const pwd = $event.target.value;
+                            const regex = {
+                                lower: /[a-z]/,
+                                upper: /[A-Z]/,
+                                number: /[0-9]/,
+                                special: /[!@#$%^&*]/
+                            };
+                            
+                            let score = 0;
+                            if (pwd.length >= 8) score++;
+                            if (pwd.length >= 12) score++;
+                            if (regex.lower.test(pwd)) score++;
+                            if (regex.upper.test(pwd)) score++;
+                            if (regex.number.test(pwd)) score++;
+                            if (regex.special.test(pwd)) score++;
+                            
+                            strength = score;
+                            
+                            if (score <= 1) {
+                                strengthText = 'Sangat Lemah';
+                                strengthColor = 'bg-red-500';
+                            } else if (score <= 2) {
+                                strengthText = 'Lemah';
+                                strengthColor = 'bg-orange-500';
+                            } else if (score <= 3) {
+                                strengthText = 'Sedang';
+                                strengthColor = 'bg-yellow-500';
+                            } else if (score <= 4) {
+                                strengthText = 'Kuat';
+                                strengthColor = 'bg-lime-500';
+                            } else {
+                                strengthText = 'Sangat Kuat';
+                                strengthColor = 'bg-green-500';
+                            }
+                        "
+                        required>
+                    
+                    {{-- Eye Icon --}}
+                    <button type="button" @click="show = !show" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700">
+                        {{-- Eye Open (Tampilkan saat password tersembunyi) --}}
+                        <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                            class="w-4 h-4">
+                            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                            <path fill-rule="evenodd"
+                                d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        {{-- Eye Closed (Tampilkan saat password terlihat) --}}
+                        <svg x-show="show" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                            class="w-4 h-4">
+                            <path
+                                d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
+                            <path
+                                d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z" />
+                            <path
+                                d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z" />
+                        </svg>
+                    </button>
+                </div>
+                
+                {{-- Password Strength Meter --}}
+                <div class="mt-2">
+                    <div class="flex gap-1 mb-1">
+                        <div class="flex-1 h-1.5 bg-gray-200 rounded-full" :class="strength >= 1 ? strengthColor : ''"></div>
+                        <div class="flex-1 h-1.5 bg-gray-200 rounded-full" :class="strength >= 2 ? strengthColor : ''"></div>
+                        <div class="flex-1 h-1.5 bg-gray-200 rounded-full" :class="strength >= 3 ? strengthColor : ''"></div>
+                        <div class="flex-1 h-1.5 bg-gray-200 rounded-full" :class="strength >= 4 ? strengthColor : ''"></div>
+                        <div class="flex-1 h-1.5 bg-gray-200 rounded-full" :class="strength >= 5 ? strengthColor : ''"></div>
+                        <div class="flex-1 h-1.5 bg-gray-200 rounded-full" :class="strength >= 6 ? strengthColor : ''"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">Kekuatan password:</span>
+                        <span class="text-xs font-medium" :class="{
+                            'text-red-500': strength <= 1,
+                            'text-orange-500': strength === 2,
+                            'text-yellow-500': strength === 3,
+                            'text-lime-500': strength === 4,
+                            'text-green-500': strength >= 5
+                        }" x-text="strengthText || '-'"></span>
+                    </div>
+                </div>
             </div>
 
             {{-- Dropdown Status (default 'aktif') --}}

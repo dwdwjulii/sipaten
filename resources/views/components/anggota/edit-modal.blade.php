@@ -40,8 +40,8 @@
         {{-- Nama --}}
         <div>
             <label class="block text-xs font-medium text-gray-800">Nama Anggota</label>
-            <input type="text" name="nama" value="{{ old('nama', $anggota->nama) }}" required
-                class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+            <input type="text" name="nama" value="{{ old('nama', $anggota->nama) }}" placeholder="Contoh: Komang Kurniawan" required
+                class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
         </div>
 
         {{-- Jenis Ternak --}}
@@ -182,15 +182,15 @@
             <div>
                 <label class="block text-xs font-medium text-gray-800">Tempat Lahir</label>
                 <input type="text" name="tempat_lahir" value="{{ old('tempat_lahir', $anggota->tempat_lahir) }}"
-                    required
-                    class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+                    placeholder="Contoh: Jinengdalem" required
+                    class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-800">Tanggal Lahir</label>
                 <input id="tanggal_lahir_edit_{{ $anggota->id }}" name="tanggal_lahir" type="text"
                     value="{{ old('tanggal_lahir', \Carbon\Carbon::parse($anggota->tanggal_lahir)->format('d/m/Y')) }}"
                     datepicker datepicker-format="dd/mm/yyyy" required
-                    class="block w-full mt-1 text-xs text-gray-800 bg-white border-gray-200 rounded-md focus:ring-0 focus:border-green-500"
+                    class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 bg-white border-gray-200 rounded-md focus:ring-0 focus:border-green-500"
                     placeholder="DD/MM/YYYY">
             </div>
         </div>
@@ -199,9 +199,9 @@
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
                 <label class="block text-xs font-medium text-gray-800">No HP</label>
-                <input type="tel" name="no_hp" value="{{ old('no_hp', $anggota->no_hp) }}" required
+                <input type="tel" name="no_hp" value="{{ old('no_hp', $anggota->no_hp) }}" placeholder="Contoh: 087345678990" required
                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,15)"
-                    class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+                    class="block w-full mt-1 text-xs text-gray-800 placeholder-gray-600 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
             </div>
             <div x-data="{ open: false, status: '{{ old('status', $anggota->status) }}' }" class="relative">
                 <label class="block text-xs font-medium text-gray-800">Status</label>
@@ -232,8 +232,8 @@
         <div>
             <label class="block text-xs font-medium text-gray-800">Lokasi Kandang</label>
             <input type="text" name="lokasi_kandang"
-                value="{{ old('lokasi_kandang', $anggota->lokasi_kandang) }}" required
-                class="block w-full mt-1 text-xs text-gray-800 border-gray-200 rounded-md focus:ring-0 focus:border-green-500" />
+                value="{{ old('lokasi_kandang', $anggota->lokasi_kandang) }}" placeholder="Contoh: BD. Kaje" required
+                class="block w-full mt-1 text-xs text-gray-800 border-gray-200 placeholder-gray-600 rounded-md focus:ring-0 focus:border-green-500" />
         </div>
 
         {{-- Footer --}}

@@ -32,14 +32,14 @@
                 <div class="mb-3">
                     <label class="block text-xs font-medium text-gray-800">Tahap</label>
                     <input type="number" name="tahap_ke" min="1"
-                        class="w-full mt-1 border-gray-200 rounded-md text-gray-800 text-xs focus:border-green-500 focus:ring-0"
-                        placeholder="" required>
+                        class="w-full mt-1 border-gray-200 rounded-md text-gray-800 text-xs placeholder-gray-600 focus:border-green-500 focus:ring-0"
+                         placeholder="Contoh: 1" required>
                 </div>
                 <div class="mb-3">
                     <label class="block text-xs font-medium text-gray-800">Tahun</label>
                     <input type="number" name="tahun" min="2000"
-                        class="w-full mt-1 border-gray-200 rounded-md text-gray-800 text-xs focus:border-green-500 focus:ring-0"
-                        placeholder="" required>
+                        class="w-full mt-1 border-gray-200 rounded-md text-gray-800 text-xs placeholder-gray-600 focus:border-green-500 focus:ring-0"
+                        placeholder="Contoh: 2025" required>
                 </div>
 
                 <div class="flex w-full gap-2 pt-2">

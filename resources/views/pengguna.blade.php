@@ -34,7 +34,6 @@
                                 <th class="w-10 px-2 py-3 border border-gray-200 text-center">No</th>
                                 <th class="px-2 py-3 border border-gray-200">Nama Pengguna</th>
                                 <th class="px-2 py-3 border border-gray-200">Username</th>
-                                <th class="px-2 py-3 border border-gray-200">Password</th>
                                 <th class="px-2 py-3 border border-gray-200 text-center">Role</th>
                                 <th class="px-2 py-3 border border-gray-200 text-center">Status</th>
                                 
@@ -52,7 +51,6 @@
                                         {{ $user->name }}
                                     </td>
                                     <td class="px-2 py-3 border border-gray-100 text-gray-900">{{ $user->email }}</td>
-                                    <td class="px-2 py-3 border border-gray-100 text-gray-900">****************</td>
                                     <td class="px-2 py-3 border border-gray-100 text-gray-900 text-center">{{ ucfirst($user->role) }}</td>
                                     <td class="px-2 py-3 border border-gray-100 text-gray-900 text-center">
                                         {{-- Contoh logika untuk status --}}
@@ -61,7 +59,7 @@
                                                 Aktif
                                             </span>
                                         @else
-                                            <span class="px-2 text-xs rounded-lg text-center bg-red-200 text-red-700 border border-red-400 font-semibold min-w-[74px] inline-block">
+                                            <span class="px-2 text-xs rounded-lg text-center bg-orange-200 text-orange-700 border border-orange-400 font-semibold min-w-[74px] inline-block">
                                                 Non-Aktif
                                             </span>
                                         @endif

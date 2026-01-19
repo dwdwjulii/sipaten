@@ -6,27 +6,34 @@
 
 @php
 $styles = [
-'error' => [
-'bg' => 'bg-red-100',
-'text' => 'text-red-900',
-'iconBg' => 'bg-red-500',
-'icon' => asset('asset/images/error.png'),
-'close' => 'text-red-600 hover:text-red-700',
-],
-'success' => [
-'bg' => 'bg-emerald-100',
-'text' => 'text-green-900',
-'iconBg' => 'bg-green-500',
-'icon' => asset('asset/images/success.png'),
-'close' => 'text-green-600 hover:text-green-700',
-],
-'warning' => [
-'bg' => 'bg-orange-100',
-'text' => 'text-orange-800',
-'iconBg' => 'bg-orange-500',
-'icon' => asset('asset/images/warning.png'),
-'close' => 'text-orange-600 hover:text-orange-700',
-],
+    'info' => [
+        'bg' => 'bg-blue-100',
+        'text' => 'text-blue-900',
+        'iconBg' => 'bg-blue-500',
+        'icon' => asset('asset/images/info.png'),
+        'close' => 'text-blue-600 hover:text-blue-700',
+    ],
+    'error' => [
+        'bg' => 'bg-red-100',
+        'text' => 'text-red-900',
+        'iconBg' => 'bg-red-500',
+        'icon' => asset('asset/images/error.png'),
+        'close' => 'text-red-600 hover:text-red-700',
+    ],
+    'success' => [
+        'bg' => 'bg-emerald-100',
+        'text' => 'text-green-900',
+        'iconBg' => 'bg-green-500',
+        'icon' => asset('asset/images/success.png'),
+        'close' => 'text-green-600 hover:text-green-700',
+    ],
+    'warning' => [
+        'bg' => 'bg-orange-100',
+        'text' => 'text-orange-800',
+        'iconBg' => 'bg-orange-500',
+        'icon' => asset('asset/images/warning.png'),
+        'close' => 'text-orange-600 hover:text-orange-700',
+    ],
 ];
 $style = $styles[$type];
 @endphp

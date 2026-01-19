@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
         // Buat User Admin
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@gmail.com',
+            'email' => 'admin@email.com',
             'password' => Hash::make('12345678'), // Ganti 'password' dengan password aman Anda
             'role' => 'admin',
             'status' => 'aktif',
@@ -29,7 +29,7 @@ class UserSeeder extends Seeder
         // Buat User Petugas
         User::create([
             'name' => 'Petugas',
-            'email' => 'petugas@gmail.com',
+            'email' => 'petugas@email.com',
             'password' => Hash::make('12345678'), // Ganti 'password' dengan password aman Anda
             'role' => 'petugas',
             'status' => 'aktif',
